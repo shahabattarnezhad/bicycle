@@ -1,18 +1,12 @@
-﻿using System.Net;
-using Azure.Core;
-using Entities.Exceptions;
+﻿using Entities.Exceptions;
 using Entities.Models;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using Presentation.Controllers.Base;
 using Service.Contracts.Base;
-using Service.Contracts.Interfaces;
 using Service.Contracts.Interfaces.Auth;
 using Service.Contracts.Interfaces.Helpers;
 using Shared.DTOs.Auth;
-using Shared.DTOs.Document;
 using Shared.Enums;
 using Shared.Responses;
 
@@ -69,8 +63,8 @@ public class AuthController : ApiControllerBase
         if (!result.Succeeded)
             return Unauthorized("Invalid username or password.");
 
-        if (user.Status != UserStatus.Approved)
-            throw new NoAccessException("Your account is not approved yet.");
+        //if (user.Status != UserStatus.Approved)
+        //    throw new NoAccessException("Your account is not approved yet.");
 
         var token = await _service.AuthService.CreateTokenAsync(user);
 

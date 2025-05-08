@@ -6,6 +6,7 @@ using Entities.Models;
 using Microsoft.Extensions.Logging;
 using Service.Contracts.Base;
 using Service.Contracts.Interfaces;
+using Shared.Consts;
 using Shared.DTOs.Bicycle;
 using Shared.Requests;
 using Shared.Responses;
@@ -119,9 +120,6 @@ internal sealed class BicycleService : IBicycleService
         var prefix = $"bicycles_station_{stationId}";
         var cacheKey = $"{prefix}_page_{bicycleParameters.PageNumber}_size_{bicycleParameters.PageSize}";
 
-        //var pagedBicycles =
-        //    await _repository.Bicycle.GetAllAsync(stationId, bicycleParameters, trackChanges, cancellationToken);
-
         var pagedBicycles = await _cache.GetOrCreateAsync(
         cacheKey,
         async () =>
@@ -171,18 +169,17 @@ internal sealed class BicycleService : IBicycleService
     public async Task<ApiResponse<IEnumerable<BicycleDto>>> GetAvailableAsync(Guid stationId, BicycleParameters bicycleParameters, bool trackChanges, CancellationToken cancellationToken = default)
     {
         await EnsureStationExistsAsync(stationId, trackChanges, cancellationToken);
-        var cacheKey = $"bicycles_station_{stationId}_available";
 
         var bicycles = await _cache.GetOrCreateAsync(
-            cacheKey,
+            "AvailableBicycles",
             async () =>
             {
                 var available =
                 await _repository.Bicycle.GetAvailableAsync(stationId, bicycleParameters, trackChanges, cancellationToken);
                 return _mapper.Map<IEnumerable<BicycleDto>>(available);
             },
-            TimeSpan.FromMinutes(10),
-            $"bicycles_station_{stationId}"
+            TimeSpan.FromMinutes(2),
+            CacheKeyPrefixes.Bicycle
         );
 
         return new ApiResponse<IEnumerable<BicycleDto>>(bicycles, "Available bicycles retrieved successfully", bicycles.Count());

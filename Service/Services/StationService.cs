@@ -4,6 +4,7 @@ using Entities.Exceptions;
 using Entities.Models;
 using Service.Contracts.Base;
 using Service.Contracts.Interfaces;
+using Shared.Consts;
 using Shared.DTOs.Station;
 using Shared.Requests;
 using Shared.Responses;
@@ -25,21 +26,15 @@ internal sealed class StationService : IStationService
 
     public async Task<ApiResponse<IEnumerable<StationDto>>> GetAllAsync(StationParameters parameters, bool trackChanges, CancellationToken cancellationToken = default)
     {
-        var prefix = "stations";
-        var cacheKey = $"{prefix}_page_{parameters.PageNumber}_size_{parameters.PageSize}";
-
         var pagedStations = await _cache.GetOrCreateAsync(
-            cacheKey,
+            "All",
             async () =>
             {
                 return await _repository.Station.GetAllAsync(parameters, trackChanges, cancellationToken);
             },
-            TimeSpan.FromMinutes(10),
-            prefix
+            TimeSpan.FromMinutes(30),
+            CacheKeyPrefixes.Station
         );
-
-        //var pagedStations = 
-        //    await _repository.Station.GetAllAsync(parameters, trackChanges, cancellationToken);
 
         var entitiesDto =
             _mapper.Map<IEnumerable<StationDto>>(pagedStations);
@@ -58,8 +53,6 @@ internal sealed class StationService : IStationService
             TimeSpan.FromMinutes(10),
             prefix
         );
-
-        //var entity = await FindEntity(entityId, trackChanges, cancellationToken);
 
         var entityDto =
             _mapper.Map<StationDto>(entity);

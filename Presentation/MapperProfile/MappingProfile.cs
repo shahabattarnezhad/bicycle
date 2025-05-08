@@ -24,5 +24,6 @@ public class MappingProfile : Profile
         CreateMap<Bicycle, BicycleForUpdationDto>().ReverseMap();
 
         CreateMap<Document, DocumentDto>().ReverseMap();
+        CreateMap<Document, DocumentForVerificationDto>().ReverseMap();
     }
 }

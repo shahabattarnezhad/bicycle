@@ -186,11 +186,13 @@ namespace Presentation.Data.Migrations
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    Path = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: false),
+                    Path = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
                     UploadedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     VerifiedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     VerifiedById = table.Column<string>(type: "nvarchar(450)", nullable: true),
                     AppUserId = table.Column<string>(type: "nvarchar(450)", nullable: true),
+                    Status = table.Column<int>(type: "int", nullable: false),
+                    Notes = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true)
                 },
@@ -333,12 +335,12 @@ namespace Presentation.Data.Migrations
             migrationBuilder.InsertData(
                 table: "AspNetUsers",
                 columns: new[] { "Id", "AccessFailedCount", "ConcurrencyStamp", "Email", "EmailConfirmed", "FirstName", "LastName", "LockoutEnabled", "LockoutEnd", "NormalizedEmail", "NormalizedUserName", "PasswordHash", "PhoneNumber", "PhoneNumberConfirmed", "SecurityStamp", "Status", "TwoFactorEnabled", "UserName" },
-                values: new object[] { "43362001-32cd-482e-a7c0-e4d2e528c94e", 0, "69b766c5-ed09-41cf-94e2-55293cd12962", "atarnezhad@gmail.com", true, "Shahab", "Attarnejad", true, null, "ATARNEZHAD@GMAIL.COM", "ATARNEZHAD", "AQAAAAIAAYagAAAAEInOeekhjehyP9Ss3eX8gGzjurgKNqSNh3+jVZ1k3dlQB3kbhJ9C5BEotmHDFc8Mhw==", null, false, "", 3, false, "atarnezhad" });
+                values: new object[] { "43362001-32cd-482e-a7c0-e4d2e528c94e", 0, "0b282d5b-a44f-41d9-a62c-3d696db9f772", "atarnezhad@gmail.com", true, "Shahab", "Attarnejad", true, null, "ATARNEZHAD@GMAIL.COM", "ATARNEZHAD", "AQAAAAIAAYagAAAAEKBTxB0DLAnhFsjM2/bFwVgf9IcFkC1c1IC5F9mf3tQZ4P7UXlIjcpE/tilRplLZUQ==", null, false, "", 3, false, "atarnezhad" });
 
             migrationBuilder.InsertData(
                 table: "Stations",
                 columns: new[] { "Id", "Capacity", "CloseTime", "CreatedAt", "Latitude", "Longitude", "Name", "OpenTime", "UpdatedAt" },
-                values: new object[] { new Guid("c8241d1d-d2c8-48a7-a441-b4e7b9ca27a9"), 20, new TimeOnly(20, 0, 0), new DateTime(2025, 5, 7, 18, 46, 58, 410, DateTimeKind.Utc).AddTicks(5976), 35.689500000000002, 139.6917, "Station A", new TimeOnly(8, 0, 0), null });
+                values: new object[] { new Guid("c8241d1d-d2c8-48a7-a441-b4e7b9ca27a9"), 20, new TimeOnly(20, 0, 0), new DateTime(2025, 5, 8, 8, 57, 35, 421, DateTimeKind.Utc).AddTicks(8867), 35.689500000000002, 139.6917, "Station A", new TimeOnly(8, 0, 0), null });
 
             migrationBuilder.InsertData(
                 table: "AspNetUserRoles",
@@ -348,7 +350,7 @@ namespace Presentation.Data.Migrations
             migrationBuilder.InsertData(
                 table: "Bicycles",
                 columns: new[] { "Id", "BicycleStatus", "BicycleType", "CreatedAt", "CurrentStationId", "IsActive", "SerialNumber", "UpdatedAt" },
-                values: new object[] { new Guid("0a7ea05a-5c16-4eeb-a42a-8022ba438b82"), 1, 1, new DateTime(2025, 5, 7, 18, 46, 58, 410, DateTimeKind.Utc).AddTicks(5799), new Guid("c8241d1d-d2c8-48a7-a441-b4e7b9ca27a9"), true, "SN-U3URPROK", null });
+                values: new object[] { new Guid("0a7ea05a-5c16-4eeb-a42a-8022ba438b82"), 1, 1, new DateTime(2025, 5, 8, 8, 57, 35, 421, DateTimeKind.Utc).AddTicks(8761), new Guid("c8241d1d-d2c8-48a7-a441-b4e7b9ca27a9"), true, "SN-U3URPROK", null });
 
             migrationBuilder.CreateIndex(
                 name: "IX_AspNetRoleClaims_RoleId",

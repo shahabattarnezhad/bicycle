@@ -1,4 +1,5 @@
 ﻿using Entities.Models.Base;
+using Shared.Enums;
 
 namespace Entities.Models;
 
@@ -15,4 +16,8 @@ public class Document : BaseEntity<Guid>
 
     public string? AppUserId { get; set; }
     public AppUser? AppUser { get; set; }
+
+    public DocumentStatus Status { get; set; } = DocumentStatus.Pending;
+
+    public string? Notes { get; set; }
 }

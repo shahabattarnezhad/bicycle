@@ -12,6 +12,9 @@ public class DocumentConfiguration : IEntityTypeConfiguration<Document>
 
         builder.Property(entity => entity.Path)
                .IsRequired()
+               .HasMaxLength(100);
+
+        builder.Property(entity => entity.Notes)
                .HasMaxLength(500);
 
         builder.HasOne(entity => entity.AppUser)

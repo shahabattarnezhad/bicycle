@@ -6,7 +6,10 @@ using Microsoft.AspNetCore.Http;
 using Service.Contracts.Base;
 using Service.Contracts.Interfaces;
 using Service.Contracts.Interfaces.Helpers;
+using Shared.Consts;
 using Shared.DTOs.Document;
+using Shared.Enums;
+using Shared.Requests;
 using Shared.Responses;
 using System.Security.Claims;
 
@@ -34,6 +37,27 @@ internal sealed class DocumentService : IDocumentService
         _httpContextAccessor = httpContextAccessor;
     }
 
+    public async Task<ApiResponse<IEnumerable<DocumentDto>>> GetAllAsync(DocumentParameters parameters, bool trackChanges, CancellationToken cancellationToken = default)
+    {
+        var prefix = "documents";
+        var cacheKey = $"{prefix}_page_{parameters.PageNumber}_size_{parameters.PageSize}_search_{parameters.SearchTerm}_status_{parameters.Status}_order_{parameters.OrderBy}";
+
+        var pagedDocuments = await _cache.GetOrCreateAsync(
+            cacheKey,
+            async () =>
+            {
+                return await _repository.Document.GetAllAsync(parameters, trackChanges, cancellationToken);
+            },
+            TimeSpan.FromMinutes(10),
+            prefix
+        );
+
+        var entitiesDto =
+            _mapper.Map<IEnumerable<DocumentDto>>(pagedDocuments);
+
+        return new ApiResponse<IEnumerable<DocumentDto>>(entitiesDto, "Documents retrieved successfully", pagedDocuments.Count());
+    }
+
 
     public async Task<ApiResponse<DocumentDto>> CreateAsync(DocumentForCreationDto entityForCreation, CancellationToken cancellationToken = default)
     {
@@ -44,20 +68,52 @@ internal sealed class DocumentService : IDocumentService
 
         var entity = new Document
         {
-            //Id = Guid.NewGuid(),
             Path = imagePath,
             AppUserId = userId,
             UploadedAt = DateTime.UtcNow,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = DateTime.UtcNow,
+            Status = DocumentStatus.Pending
         };
 
         _repository.Document.CreateEntity(entity);
         await _repository.SaveAsync(cancellationToken);
 
+        _cache.RemoveByPrefix("documents");
+
         var entityToReturn =
             _mapper.Map<DocumentDto>(entity);
 
         return new ApiResponse<DocumentDto>(entityToReturn, "Document created successfully");
+    }
+
+    public async Task<ApiResponse<DocumentDto>>? GetAsync(Guid entityId, bool trackChanges, CancellationToken cancellationToken = default)
+    {
+        var entity = await _cache.GetOrCreateAsync(
+            entityId.ToString(),
+            async () => await FindEntity(entityId, trackChanges, cancellationToken),
+            TimeSpan.FromMinutes(10),
+            CacheKeyPrefixes.Document
+        );
+
+        var entityDto =
+            _mapper.Map<DocumentDto>(entity);
+
+        return new ApiResponse<DocumentDto>(entityDto, "Document retrieved successfully");
+    }
+
+    public async Task<ApiResponse<string>> UpdateAsync(Guid entityId, DocumentForVerificationDto entityForUpdation, bool trackChanges, CancellationToken cancellationToken = default)
+    {
+        var entity =
+           await FindEntity(entityId, trackChanges, cancellationToken);
+
+        _mapper.Map(entityForUpdation, entity);
+
+        await _repository.SaveAsync(cancellationToken);
+
+        _cache.Remove($"documents_{entityId}");
+        _cache.RemoveByPrefix("documents");
+
+        return new ApiResponse<string>(null, "Document updated successfully");
     }
 
     private string GetCurrentUserId()
@@ -68,5 +124,13 @@ internal sealed class DocumentService : IDocumentService
         if (userId == null)
             throw new UserNotFoundException("User not found");
         return userId;
+    }
+
+    private async Task<Document> FindEntity(Guid entityId, bool trackChanges, CancellationToken cancellationToken = default)
+    {
+        var document =
+            await _repository.Document.GetAsync(entityId, trackChanges, cancellationToken);
+
+        return document ?? throw new EntityNotFoundException(nameof(document), entityId);
     }
 }

@@ -7,66 +7,79 @@ namespace Service.Base;
 public class MemoryCacheService : IMemoryCacheService
 {
     private readonly IMemoryCache _cache;
-    private readonly ConcurrentDictionary<string, ConcurrentBag<string>> _prefixKeyMap = new();
+    private readonly ConcurrentDictionary<string, ConcurrentDictionary<string, byte>> _prefixKeyMap = new();
+    private static readonly TimeSpan DefaultExpiration = TimeSpan.FromMinutes(5);
 
     public MemoryCacheService(IMemoryCache cache)
     {
         _cache = cache;
     }
 
-    public async Task<T?> GetOrCreateAsync<T>(
-        string cacheKey,
-        Func<Task<T>> factory,
-        TimeSpan? absoluteExpireTime = null,
-        string? prefix = null)
+    private string GetCacheKey(string key, string? prefix) => string.IsNullOrWhiteSpace(prefix) ? key : $"{prefix}:{key}";
+
+    public async Task<T?> GetOrCreateAsync<T>(string key, Func<Task<T>> factory, TimeSpan? expiration = null, string? prefix = null)
     {
-        if (_cache.TryGetValue(cacheKey, out T value))
+        var fullKey = GetCacheKey(key, prefix);
+
+        if (_cache.TryGetValue(fullKey, out T value))
         {
-            Console.WriteLine($"[CACHE HIT] {cacheKey}");
+            Console.WriteLine($"[CACHE HIT] {fullKey}");
             return value;
         }
 
-        Console.WriteLine($"[CACHE MISS] {cacheKey}");
+        Console.WriteLine($"[CACHE MISS] {fullKey}");
         value = await factory();
 
-        _cache.Set(cacheKey, value, absoluteExpireTime ?? TimeSpan.FromMinutes(5));
-
-        if (!string.IsNullOrWhiteSpace(prefix))
-            RegisterKeyWithPrefix(prefix, cacheKey);
+        _cache.Set(fullKey, value, expiration ?? DefaultExpiration);
+        if (!string.IsNullOrWhiteSpace(prefix)) RegisterKeyWithPrefix(prefix!, fullKey);
 
         return value;
     }
 
+    public async Task<T?> GetAsync<T>(string key, string? prefix = null)
+    {
+        var fullKey = GetCacheKey(key, prefix);
+        return _cache.TryGetValue(fullKey, out T value) ? value : default;
+    }
+
+    public bool TryGet<T>(string key, out T? value, string? prefix = null)
+    {
+        var fullKey = GetCacheKey(key, prefix);
+        if (_cache.TryGetValue(fullKey, out T val))
+        {
+            value = val;
+            return true;
+        }
+        value = default;
+        return false;
+    }
+
     public Task SetAsync<T>(string key, T value, TimeSpan expiration, string? prefix = null)
     {
-        _cache.Set(key, value, expiration);
-
-        if (!string.IsNullOrWhiteSpace(prefix))
-            RegisterKeyWithPrefix(prefix, key);
-
+        Set(key, value, expiration, prefix);
         return Task.CompletedTask;
     }
 
-    public async Task<T?> GetAsync<T>(string key)
+    public void Set<T>(string key, T value, TimeSpan expiration, string? prefix = null)
     {
-        return _cache.TryGetValue(key, out T value) ? value : default;
+        var fullKey = GetCacheKey(key, prefix);
+        _cache.Set(fullKey, value, expiration);
+
+        if (!string.IsNullOrWhiteSpace(prefix))
+            RegisterKeyWithPrefix(prefix!, fullKey);
     }
 
-    public void Set<T>(string key, T value, TimeSpan duration)
+    public void Remove(string key, string? prefix = null)
     {
-        _cache.Set(key, value, duration);
-    }
-
-    public void Remove(string key)
-    {
-        _cache.Remove(key);
+        var fullKey = GetCacheKey(key, prefix);
+        _cache.Remove(fullKey);
     }
 
     public void RemoveByPrefix(string prefix)
     {
         if (_prefixKeyMap.TryRemove(prefix, out var keys))
         {
-            foreach (var key in keys)
+            foreach (var key in keys.Keys)
             {
                 _cache.Remove(key);
             }
@@ -75,13 +88,7 @@ public class MemoryCacheService : IMemoryCacheService
 
     private void RegisterKeyWithPrefix(string prefix, string key)
     {
-        _prefixKeyMap.AddOrUpdate(
-            prefix,
-            _ => new ConcurrentBag<string> { key },
-            (_, existing) =>
-            {
-                existing.Add(key);
-                return existing;
-            });
+        var keys = _prefixKeyMap.GetOrAdd(prefix, _ => new ConcurrentDictionary<string, byte>());
+        keys.TryAdd(key, 0);
     }
 }
