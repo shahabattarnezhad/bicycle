@@ -9,6 +9,7 @@ using Service.Contracts.Interfaces.Helpers;
 using Shared.Consts;
 using Shared.DTOs.Document;
 using Shared.Enums;
+using Shared.Helpers;
 using Shared.Requests;
 using Shared.Responses;
 using System.Security.Claims;
@@ -39,8 +40,8 @@ internal sealed class DocumentService : IDocumentService
 
     public async Task<ApiResponse<IEnumerable<DocumentDto>>> GetAllAsync(DocumentParameters parameters, bool trackChanges, CancellationToken cancellationToken = default)
     {
-        var prefix = "documents";
-        var cacheKey = $"{prefix}_page_{parameters.PageNumber}_size_{parameters.PageSize}_search_{parameters.SearchTerm}_status_{parameters.Status}_order_{parameters.OrderBy}";
+        var prefix = DocumentCacheKeyHelper.DocumentPrefix;
+        var cacheKey = DocumentCacheKeyHelper.GenerateDocumentListKey(parameters);
 
         var pagedDocuments = await _cache.GetOrCreateAsync(
             cacheKey,
@@ -78,7 +79,7 @@ internal sealed class DocumentService : IDocumentService
         _repository.Document.CreateEntity(entity);
         await _repository.SaveAsync(cancellationToken);
 
-        _cache.RemoveByPrefix("documents");
+        _cache.RemoveByPrefix(DocumentCacheKeyHelper.DocumentPrefix);
 
         var entityToReturn =
             _mapper.Map<DocumentDto>(entity);
@@ -86,13 +87,16 @@ internal sealed class DocumentService : IDocumentService
         return new ApiResponse<DocumentDto>(entityToReturn, "Document created successfully");
     }
 
+
     public async Task<ApiResponse<DocumentDto>>? GetAsync(Guid entityId, bool trackChanges, CancellationToken cancellationToken = default)
     {
+        var cacheKey = DocumentCacheKeyHelper.GenerateDocumentKey(entityId);
+
         var entity = await _cache.GetOrCreateAsync(
-            entityId.ToString(),
+            cacheKey,
             async () => await FindEntity(entityId, trackChanges, cancellationToken),
             TimeSpan.FromMinutes(10),
-            CacheKeyPrefixes.Document
+            DocumentCacheKeyHelper.DocumentPrefix
         );
 
         var entityDto =
@@ -100,6 +104,7 @@ internal sealed class DocumentService : IDocumentService
 
         return new ApiResponse<DocumentDto>(entityDto, "Document retrieved successfully");
     }
+
 
     public async Task<ApiResponse<string>> UpdateAsync(Guid entityId, DocumentForVerificationDto entityForUpdation, bool trackChanges, CancellationToken cancellationToken = default)
     {
@@ -110,8 +115,8 @@ internal sealed class DocumentService : IDocumentService
 
         await _repository.SaveAsync(cancellationToken);
 
-        _cache.Remove($"documents_{entityId}");
-        _cache.RemoveByPrefix("documents");
+        _cache.Remove(DocumentCacheKeyHelper.GenerateDocumentKey(entityId));
+        _cache.RemoveByPrefix(DocumentCacheKeyHelper.DocumentPrefix);
 
         return new ApiResponse<string>(null, "Document updated successfully");
     }

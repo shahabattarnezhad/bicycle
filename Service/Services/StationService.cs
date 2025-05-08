@@ -6,6 +6,7 @@ using Service.Contracts.Base;
 using Service.Contracts.Interfaces;
 using Shared.Consts;
 using Shared.DTOs.Station;
+using Shared.Helpers;
 using Shared.Requests;
 using Shared.Responses;
 
@@ -26,8 +27,11 @@ internal sealed class StationService : IStationService
 
     public async Task<ApiResponse<IEnumerable<StationDto>>> GetAllAsync(StationParameters parameters, bool trackChanges, CancellationToken cancellationToken = default)
     {
+        var cacheKey = 
+            StationCacheKeyHelper.GetPagedKey(CacheKeyPrefixes.Station, parameters.PageNumber, parameters.PageSize);
+
         var pagedStations = await _cache.GetOrCreateAsync(
-            "All",
+            cacheKey,
             async () =>
             {
                 return await _repository.Station.GetAllAsync(parameters, trackChanges, cancellationToken);
@@ -44,14 +48,13 @@ internal sealed class StationService : IStationService
 
     public async Task<ApiResponse<StationDto>>? GetAsync(Guid entityId, bool trackChanges, CancellationToken cancellationToken = default)
     {
-        var prefix = "stations";
-        var cacheKey = $"{prefix}_{entityId}";
+        var cacheKey = StationCacheKeyHelper.GetEntityKey(CacheKeyPrefixes.Station, entityId);
 
         var entity = await _cache.GetOrCreateAsync(
             cacheKey,
             async () => await FindEntity(entityId, trackChanges, cancellationToken),
             TimeSpan.FromMinutes(10),
-            prefix
+            CacheKeyPrefixes.Station
         );
 
         var entityDto =
@@ -68,7 +71,7 @@ internal sealed class StationService : IStationService
         _repository.Station.CreateEntity(entity);
         await _repository.SaveAsync(cancellationToken);
 
-        _cache.RemoveByPrefix("stations");
+        _cache.RemoveByPrefix(CacheKeyPrefixes.Station);
 
         var entityToReturn =
             _mapper.Map<StationDto>(entity);
@@ -84,8 +87,8 @@ internal sealed class StationService : IStationService
         _repository.Station.DeleteEntity(entity);
         await _repository.SaveAsync(cancellationToken);
 
-        _cache.Remove($"stations_{entityId}");
-        _cache.RemoveByPrefix("stations");
+        _cache.Remove(StationCacheKeyHelper.GetEntityKey(CacheKeyPrefixes.Station, entityId));
+        _cache.RemoveByPrefix(CacheKeyPrefixes.Station);
 
         return new ApiResponse<string>(null, "Station deleted successfully");
     }
@@ -96,11 +99,10 @@ internal sealed class StationService : IStationService
            await FindEntity(entityId, trackChanges, cancellationToken);
 
         _mapper.Map(entityForUpdation, entity);
-
         await _repository.SaveAsync(cancellationToken);
 
-        _cache.Remove($"stations_{entityId}");
-        _cache.RemoveByPrefix("stations");
+        _cache.Remove(StationCacheKeyHelper.GetEntityKey(CacheKeyPrefixes.Station, entityId));
+        _cache.RemoveByPrefix(CacheKeyPrefixes.Station);
 
         return new ApiResponse<string>(null, "Station updated successfully");
     }
