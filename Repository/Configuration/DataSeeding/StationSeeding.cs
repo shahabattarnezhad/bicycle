@@ -17,6 +17,7 @@ public class StationSeeding : IEntityTypeConfiguration<Station>
             Latitude = 35.6895,
             Longitude = 139.6917,
             Capacity = 20,
+            AvailableBicycles = 11,
             OpenTime = new TimeOnly(8, 0, 0),
             CloseTime = new TimeOnly(20, 0, 0),
             CreatedAt = DateTime.UtcNow,

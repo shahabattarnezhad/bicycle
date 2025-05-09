@@ -94,6 +94,12 @@ public static class ServiceExtensions
     public static void ConfigureFileService(this IServiceCollection services) =>
         services.AddScoped<IFileService, FileService>();
 
+    public static void ConfigureUserContextService(this IServiceCollection services)
+    {
+        services.AddHttpContextAccessor();
+        services.AddScoped<IUserContextService, UserContextService>();
+    }
+
     public static void ConfigureJWTSettings(this IServiceCollection services, IConfiguration configuration)
     {
         services.Configure<JwtSettings>(configuration.GetSection("JwtSettings"));

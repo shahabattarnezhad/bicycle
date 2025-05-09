@@ -2,19 +2,14 @@
 using AutoMapper;
 using Entities.Exceptions;
 using Entities.Models;
-using Microsoft.AspNetCore.Http;
 using Service.Contracts.Base;
 using Service.Contracts.Interfaces;
-using Service.Contracts.Interfaces.Helpers;
+using Service.Contracts.Interfaces.Auth;
 using Service.Services.Helpers;
-using Shared.Consts;
-using Shared.DTOs.Document;
 using Shared.DTOs.Reservation;
 using Shared.Enums;
-using Shared.Helpers;
 using Shared.Requests;
 using Shared.Responses;
-using System.Security.Claims;
 
 namespace Service.Services;
 
@@ -23,18 +18,18 @@ internal sealed class ReservationService : IReservationService
     private readonly IRepositoryManager _repository;
     private readonly IMapper _mapper;
     private readonly IMemoryCacheService _cache;
-    private readonly IHttpContextAccessor _httpContextAccessor;
+    private readonly IUserContextService _userContextService;
 
     public ReservationService(
         IRepositoryManager repository,
         IMapper mapper,
         IMemoryCacheService cache,
-        IHttpContextAccessor httpContextAccessor)
+        IUserContextService userContextService)
     {
         _repository = repository;
         _mapper = mapper;
         _cache = cache;
-        _httpContextAccessor = httpContextAccessor;
+        _userContextService = userContextService;
     }
 
     public async Task<ApiResponse<IEnumerable<ReservationDto>>> GetAllAsync(ReservationParameters parameters, bool trackChanges, CancellationToken cancellationToken = default)
@@ -61,28 +56,80 @@ internal sealed class ReservationService : IReservationService
 
     public async Task<ApiResponse<ReservationDto>> CreateAsync(ReservationForCreationDto entityForCreation, CancellationToken cancellationToken = default)
     {
-        string? userId = GetCurrentUserId();
 
-        var entity = new Reservation
+        if (_userContextService.UserStatus != UserStatus.Approved.ToString())
+            //throw new GeneralBadRequestException("User is not approved");
+            throw new NoAccessException("Your account is not approved yet.");
+
+        var userId = _userContextService.UserId;
+
+        // 2. بررسی رزرو فعال کاربر
+        bool hasActiveReservation =
+            await _repository.Reservation.ExistsActiveStatusByUserAsync(userId, false, cancellationToken);
+
+        if (hasActiveReservation)
+            throw new GeneralBadRequestException("You already have an active reservation.");
+
+        // 3. بررسی زمان اجاره
+        if (entityForCreation.StartTime < DateTime.UtcNow)
+            throw new GeneralBadRequestException("Start time cannot be in the past.");
+
+        if ((entityForCreation.EndTime - entityForCreation.StartTime).TotalHours > 6)
+            throw new GeneralBadRequestException("Reservations cannot exceed 6 hours.");
+
+        // شروع تراکنش
+        using var transaction = await _repository.BeginTransactionAsync(cancellationToken);
+
+        try
         {
-            UserId = userId,
-            BicycleId = entityForCreation.BicycleId,
-            StartTime = entityForCreation.StartTime,
-            EndTime = entityForCreation.EndTime,
-            CreatedAt = DateTime.UtcNow,
-            ReservationStatus = ReservationStatus.Active,
-            TotalCost = CalculateCost(entityForCreation.StartTime, entityForCreation.EndTime)
-        };
+            // 4. بررسی دوچرخه و ایستگاه
+            var bicycle =
+                await _repository.Bicycle.GetAsync(entityForCreation.BicycleId, trackChanges: true, cancellationToken);
 
-        _repository.Reservation.CreateEntity(entity);
-        await _repository.SaveAsync(cancellationToken);
+            if (bicycle == null || bicycle.BicycleStatus != BicycleStatus.Available)
+                throw new GeneralBadRequestException("Selected bicycle is not available.");
 
-        _cache.RemoveByPrefix(ReservationCacheKeyHelper.ReservationPrefix);
+            var station =
+                await _repository.Station.GetAsync(bicycle.CurrentStationId, trackChanges: true, cancellationToken);
 
-        var entityToReturn =
-            _mapper.Map<ReservationDto>(entity);
+            if (station == null || station.AvailableBicycles <= 0)
+                throw new GeneralBadRequestException("No available bikes at the station.");
 
-        return new ApiResponse<ReservationDto>(entityToReturn, "Reservation created successfully");
+            // 5. ساخت رزرو
+            var reservation = new Reservation
+            {
+                UserId = userId,
+                BicycleId = entityForCreation.BicycleId,
+                StartTime = entityForCreation.StartTime,
+                EndTime = entityForCreation.EndTime,
+                CreatedAt = DateTime.UtcNow,
+                ReservationStatus = ReservationStatus.Active,
+                TotalCost = CalculateCost(entityForCreation.StartTime, entityForCreation.EndTime)
+            };
+
+            _repository.Reservation.CreateEntity(reservation);
+
+            // 6. آپدیت دوچرخه و ایستگاه
+            bicycle.BicycleStatus = BicycleStatus.Rented;
+            station.AvailableBicycles--;
+
+            // 7. ذخیره همه تغییرات
+            await _repository.SaveAsync(cancellationToken);
+
+            // 8. commit تراکنش
+            await transaction.CommitAsync(cancellationToken);
+
+            // 9. پاکسازی کش
+            _cache.RemoveByPrefix(ReservationCacheKeyHelper.ReservationPrefix);
+
+            var dtoToReturn = _mapper.Map<ReservationDto>(reservation);
+            return new ApiResponse<ReservationDto>(dtoToReturn, "Reservation created successfully.");
+        }
+        catch
+        {
+            await transaction.RollbackAsync(cancellationToken);
+            throw;
+        }
     }
 
 
@@ -115,16 +162,6 @@ internal sealed class ReservationService : IReservationService
         _cache.RemoveByPrefix(ReservationCacheKeyHelper.ReservationPrefix);
 
         return new ApiResponse<string>(null, "Station deleted successfully");
-    }
-
-    private string GetCurrentUserId()
-    {
-        var userId =
-                    _httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
-
-        if (userId == null)
-            throw new UserNotFoundException("User not found");
-        return userId;
     }
 
     private async Task<Reservation> FindEntity(Guid entityId, bool trackChanges, CancellationToken cancellationToken = default)

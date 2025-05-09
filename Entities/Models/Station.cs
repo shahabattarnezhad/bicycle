@@ -12,6 +12,8 @@ public class Station : BaseEntity<Guid>
 
     public int Capacity { get; set; }
 
+    public int AvailableBicycles { get; set; }
+
     public TimeOnly OpenTime { get; set; }
 
     public TimeOnly CloseTime { get; set; }

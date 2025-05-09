@@ -24,12 +24,12 @@ public class SeederRunner
 
         var repository = scopedServices.GetRequiredService<IRepositoryManager>();
 
-        //var stationCount = await repository.Station.CountAsync(trackChanges: false, cancellationToken);
-        //if (stationCount > 0)
-        //{
-        //    _logger.LogInformation("Seeding skipped. Database already contains data.");
-        //    return;
-        //}
+        var stationCount = await repository.Station.CountAsync(trackChanges: false, cancellationToken);
+        if (stationCount > 1)
+        {
+            _logger.LogInformation("Seeding skipped. Database already contains data.");
+            return;
+        }
 
         var stations = StationFaker.GenerateStations(5);
         foreach (var station in stations)

@@ -2,17 +2,15 @@
 using AutoMapper;
 using Entities.Exceptions;
 using Entities.Models;
-using Microsoft.AspNetCore.Http;
 using Service.Contracts.Base;
 using Service.Contracts.Interfaces;
+using Service.Contracts.Interfaces.Auth;
 using Service.Contracts.Interfaces.Helpers;
-using Shared.Consts;
 using Shared.DTOs.Document;
 using Shared.Enums;
 using Shared.Helpers;
 using Shared.Requests;
 using Shared.Responses;
-using System.Security.Claims;
 
 namespace Service.Services;
 
@@ -22,20 +20,20 @@ internal sealed class DocumentService : IDocumentService
     private readonly IFileService _fileService;
     private readonly IMapper _mapper;
     private readonly IMemoryCacheService _cache;
-    private readonly IHttpContextAccessor _httpContextAccessor;
+    private readonly IUserContextService _userContextService;
 
     public DocumentService(
         IRepositoryManager repository,
         IMapper mapper,
         IMemoryCacheService cache,
         IFileService fileService,
-        IHttpContextAccessor httpContextAccessor)
+        IUserContextService userContextService)
     {
         _repository = repository;
         _mapper = mapper;
         _cache = cache;
         _fileService = fileService;
-        _httpContextAccessor = httpContextAccessor;
+        _userContextService = userContextService;
     }
 
     public async Task<ApiResponse<IEnumerable<DocumentDto>>> GetAllAsync(DocumentParameters parameters, bool trackChanges, CancellationToken cancellationToken = default)
@@ -62,7 +60,7 @@ internal sealed class DocumentService : IDocumentService
 
     public async Task<ApiResponse<DocumentDto>> CreateAsync(DocumentForCreationDto entityForCreation, CancellationToken cancellationToken = default)
     {
-        string? userId = GetCurrentUserId();
+        var userId = _userContextService.UserId;
 
         var imagePath =
             await _fileService.SaveFileAsync(entityForCreation.DocumentFile);
@@ -119,16 +117,6 @@ internal sealed class DocumentService : IDocumentService
         _cache.RemoveByPrefix(DocumentCacheKeyHelper.DocumentPrefix);
 
         return new ApiResponse<string>(null, "Document updated successfully");
-    }
-
-    private string GetCurrentUserId()
-    {
-        var userId =
-                    _httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
-
-        if (userId == null)
-            throw new UserNotFoundException("User not found");
-        return userId;
     }
 
     private async Task<Document> FindEntity(Guid entityId, bool trackChanges, CancellationToken cancellationToken = default)

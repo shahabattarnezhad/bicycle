@@ -10,6 +10,8 @@ public interface IReservationRepository
 
     Task<Reservation?> GetAsync(Guid entityId, bool trackChanges, CancellationToken cancellationToken = default);
 
+    Task<bool> ExistsActiveStatusByUserAsync(string userId, bool trackChanges, CancellationToken cancellationToken = default);
+
     void CreateEntity(Reservation reservation);
 
     void UpdateEntity(Reservation reservation);

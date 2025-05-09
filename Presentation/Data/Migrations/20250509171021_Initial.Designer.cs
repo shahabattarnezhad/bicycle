@@ -12,7 +12,7 @@ using Repository.Data;
 namespace Presentation.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250508085737_Initial")]
+    [Migration("20250509171021_Initial")]
     partial class Initial
     {
         /// <inheritdoc />
@@ -154,7 +154,7 @@ namespace Presentation.Data.Migrations
                         {
                             Id = "43362001-32cd-482e-a7c0-e4d2e528c94e",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "0b282d5b-a44f-41d9-a62c-3d696db9f772",
+                            ConcurrencyStamp = "bcb9c0e6-1b4e-4bfa-a036-7bff4ccae466",
                             Email = "atarnezhad@gmail.com",
                             EmailConfirmed = true,
                             FirstName = "Shahab",
@@ -162,7 +162,7 @@ namespace Presentation.Data.Migrations
                             LockoutEnabled = true,
                             NormalizedEmail = "ATARNEZHAD@GMAIL.COM",
                             NormalizedUserName = "ATARNEZHAD",
-                            PasswordHash = "AQAAAAIAAYagAAAAEKBTxB0DLAnhFsjM2/bFwVgf9IcFkC1c1IC5F9mf3tQZ4P7UXlIjcpE/tilRplLZUQ==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEBkA0pnZ74igZLFNsaFSRDu7NialqLTcH2LKxUp//Zo5/MhJRsFtnC6Hv2BOA+fC0g==",
                             PhoneNumberConfirmed = false,
                             SecurityStamp = "",
                             Status = 3,
@@ -212,7 +212,7 @@ namespace Presentation.Data.Migrations
                             Id = new Guid("0a7ea05a-5c16-4eeb-a42a-8022ba438b82"),
                             BicycleStatus = 1,
                             BicycleType = 1,
-                            CreatedAt = new DateTime(2025, 5, 8, 8, 57, 35, 421, DateTimeKind.Utc).AddTicks(8761),
+                            CreatedAt = new DateTime(2025, 5, 9, 17, 10, 19, 670, DateTimeKind.Utc).AddTicks(9384),
                             CurrentStationId = new Guid("c8241d1d-d2c8-48a7-a441-b4e7b9ca27a9"),
                             IsActive = true,
                             SerialNumber = "SN-U3URPROK"
@@ -388,6 +388,9 @@ namespace Presentation.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<int>("AvailableBicycles")
+                        .HasColumnType("int");
+
                     b.Property<int>("Capacity")
                         .HasColumnType("int");
 
@@ -424,9 +427,10 @@ namespace Presentation.Data.Migrations
                         new
                         {
                             Id = new Guid("c8241d1d-d2c8-48a7-a441-b4e7b9ca27a9"),
+                            AvailableBicycles = 11,
                             Capacity = 20,
                             CloseTime = new TimeOnly(20, 0, 0),
-                            CreatedAt = new DateTime(2025, 5, 8, 8, 57, 35, 421, DateTimeKind.Utc).AddTicks(8867),
+                            CreatedAt = new DateTime(2025, 5, 9, 17, 10, 19, 670, DateTimeKind.Utc).AddTicks(9628),
                             Latitude = 35.689500000000002,
                             Longitude = 139.6917,
                             Name = "Station A",

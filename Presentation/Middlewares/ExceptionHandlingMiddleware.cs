@@ -33,6 +33,11 @@ public class ExceptionHandlingMiddleware
             var errors = ex.Errors.Select(e => e.ErrorMessage).ToList();
             await WriteResponseAsync(context, HttpStatusCode.BadRequest, "Validation error", errors);
         }
+        catch (GeneralBadRequestException ex)
+        {
+            _logger.LogWarning(ex, "Validation failed");
+            await WriteResponseAsync(context, HttpStatusCode.BadRequest, ex.Message);
+        }
         catch (NoAccessException ex)
         {
             _logger.LogWarning(ex, "Access forbidden");

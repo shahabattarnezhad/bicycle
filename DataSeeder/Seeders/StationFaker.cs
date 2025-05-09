@@ -13,6 +13,7 @@ public static class StationFaker
             .RuleFor(s => s.Latitude, f => f.Address.Latitude())
             .RuleFor(s => s.Longitude, f => f.Address.Longitude())
             .RuleFor(s => s.Capacity, f => f.Random.Int(5, 20))
+            .RuleFor(s => s.AvailableBicycles, f => f.Random.Int(0, 20))
             .RuleFor(s => s.OpenTime, _ => new TimeOnly(6, 0))
             .RuleFor(s => s.CloseTime, _ => new TimeOnly(22, 0))
             .RuleFor(s => s.CreatedAt, f => f.Date.Past());

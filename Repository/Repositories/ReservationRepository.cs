@@ -6,6 +6,7 @@ using Repository.Data;
 using Shared.Requests.Base;
 using Shared.Requests;
 using Repository.Extensions;
+using Shared.Enums;
 
 namespace Repository.Repositories;
 
@@ -30,6 +31,12 @@ public class ReservationRepository : RepositoryBase<Reservation>, IReservationRe
     {
         return await FindByCondition(entity => entity.Id.Equals(entityId), trackChanges)
                      .SingleOrDefaultAsync(cancellationToken);
+    }
+
+    public async Task<bool> ExistsActiveStatusByUserAsync(string userId, bool trackChanges, CancellationToken cancellationToken = default)
+    {
+        return await FindByCondition(entity => entity.UserId.Equals(userId) && entity.ReservationStatus == ReservationStatus.Active, trackChanges)
+                     .AnyAsync(cancellationToken);
     }
 
     public void CreateEntity(Reservation reservation) => Create(reservation);

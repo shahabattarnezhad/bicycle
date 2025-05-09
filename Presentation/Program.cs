@@ -21,6 +21,7 @@ builder.Services.ConfigureTokenService();
 builder.Services.ConfigureFileService();
 builder.Services.ConfigureAuthentication(builder.Configuration);
 builder.Services.ConfigureJWTSettings(builder.Configuration);
+builder.Services.ConfigureUserContextService();
 builder.Services.ConfigureSwagger();
 
 builder.Services.AddControllers();
@@ -38,12 +39,6 @@ if (app.Environment.IsDevelopment())
     var seeder = scope.ServiceProvider.GetRequiredService<SeederRunner>();
     await seeder.SeedAsync();
 }
-
-//using (var scope = app.Services.CreateScope())
-//{
-//    var seeder = scope.ServiceProvider.GetRequiredService<SeederRunner>();
-//    await seeder.SeedAsync();
-//}
 
 app.UseHttpsRedirection();
 app.UseMiddleware<ExceptionHandlingMiddleware>();

@@ -17,7 +17,7 @@ public class StationRepository : RepositoryBase<Station>, IStationRepository
 
     public async Task<PagedList<Station>> GetAllAsync(StationParameters parameters, bool trackChanges, CancellationToken cancellationToken)
     {
-        var stations =  FindAll(trackChanges)
+        var stations = FindAll(trackChanges)
                                         .Filter(parameters.SearchTerm)
                                         .Sort(parameters.OrderBy);
 
@@ -36,6 +36,11 @@ public class StationRepository : RepositoryBase<Station>, IStationRepository
     {
         return await FindByCondition(entity => entity.Id.Equals(entityId), trackChanges)
                      .SingleOrDefaultAsync(cancellationToken);
+    }
+
+    public async Task<int> CountAsync(bool trackChanges, CancellationToken cancellationToken = default)
+    {
+        return await FindAll(trackChanges).CountAsync(cancellationToken);
     }
 
     public void CreateEntity(Station station) => Create(station);

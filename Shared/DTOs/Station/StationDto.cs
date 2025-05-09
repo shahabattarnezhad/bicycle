@@ -12,6 +12,8 @@ public record StationDto : BaseEntityDto<Guid>
 
     public int Capacity { get; init; }
 
+    public int AvailableBicycles { get; init; }
+
     public TimeOnly OpenTime { get; init; }
 
     public TimeOnly CloseTime { get; init; }

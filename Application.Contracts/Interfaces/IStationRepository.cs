@@ -12,6 +12,8 @@ public interface IStationRepository
 
     Task<Station?> GetAsync(Guid entityId, bool trackChanges, CancellationToken cancellationToken = default);
 
+    Task<int> CountAsync(bool trackChanges, CancellationToken cancellationToken = default);
+
     void CreateEntity(Station station);
 
     void UpdateEntity(Station station);

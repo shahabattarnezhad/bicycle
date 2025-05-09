@@ -1,5 +1,6 @@
 ﻿using Application.Contracts.Base;
 using Application.Contracts.Interfaces;
+using Microsoft.EntityFrameworkCore.Storage;
 using Repository.Data;
 using Repository.Repositories;
 
@@ -35,6 +36,11 @@ public sealed class RepositoryManager : IRepositoryManager
     public IBicycleRepository Bicycle => _bicycleRepository.Value;
     public IDocumentRepository Document => _documentRepository.Value;
     public IReservationRepository Reservation => _reservationRepository.Value;
+
+    public async Task<IDbContextTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default)
+    {
+        return await _context.Database.BeginTransactionAsync(cancellationToken);
+    }
 
     public async Task SaveAsync(CancellationToken cancellationToken = default) 
         => await _context.SaveChangesAsync(cancellationToken);

@@ -64,6 +64,7 @@ namespace Presentation.Data.Migrations
                     Latitude = table.Column<double>(type: "float(12)", precision: 12, scale: 8, nullable: false),
                     Longitude = table.Column<double>(type: "float(12)", precision: 12, scale: 8, nullable: false),
                     Capacity = table.Column<int>(type: "int", nullable: false),
+                    AvailableBicycles = table.Column<int>(type: "int", nullable: false),
                     OpenTime = table.Column<TimeOnly>(type: "time", nullable: false),
                     CloseTime = table.Column<TimeOnly>(type: "time", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
@@ -335,12 +336,12 @@ namespace Presentation.Data.Migrations
             migrationBuilder.InsertData(
                 table: "AspNetUsers",
                 columns: new[] { "Id", "AccessFailedCount", "ConcurrencyStamp", "Email", "EmailConfirmed", "FirstName", "LastName", "LockoutEnabled", "LockoutEnd", "NormalizedEmail", "NormalizedUserName", "PasswordHash", "PhoneNumber", "PhoneNumberConfirmed", "SecurityStamp", "Status", "TwoFactorEnabled", "UserName" },
-                values: new object[] { "43362001-32cd-482e-a7c0-e4d2e528c94e", 0, "0b282d5b-a44f-41d9-a62c-3d696db9f772", "atarnezhad@gmail.com", true, "Shahab", "Attarnejad", true, null, "ATARNEZHAD@GMAIL.COM", "ATARNEZHAD", "AQAAAAIAAYagAAAAEKBTxB0DLAnhFsjM2/bFwVgf9IcFkC1c1IC5F9mf3tQZ4P7UXlIjcpE/tilRplLZUQ==", null, false, "", 3, false, "atarnezhad" });
+                values: new object[] { "43362001-32cd-482e-a7c0-e4d2e528c94e", 0, "bcb9c0e6-1b4e-4bfa-a036-7bff4ccae466", "atarnezhad@gmail.com", true, "Shahab", "Attarnejad", true, null, "ATARNEZHAD@GMAIL.COM", "ATARNEZHAD", "AQAAAAIAAYagAAAAEBkA0pnZ74igZLFNsaFSRDu7NialqLTcH2LKxUp//Zo5/MhJRsFtnC6Hv2BOA+fC0g==", null, false, "", 3, false, "atarnezhad" });
 
             migrationBuilder.InsertData(
                 table: "Stations",
-                columns: new[] { "Id", "Capacity", "CloseTime", "CreatedAt", "Latitude", "Longitude", "Name", "OpenTime", "UpdatedAt" },
-                values: new object[] { new Guid("c8241d1d-d2c8-48a7-a441-b4e7b9ca27a9"), 20, new TimeOnly(20, 0, 0), new DateTime(2025, 5, 8, 8, 57, 35, 421, DateTimeKind.Utc).AddTicks(8867), 35.689500000000002, 139.6917, "Station A", new TimeOnly(8, 0, 0), null });
+                columns: new[] { "Id", "AvailableBicycles", "Capacity", "CloseTime", "CreatedAt", "Latitude", "Longitude", "Name", "OpenTime", "UpdatedAt" },
+                values: new object[] { new Guid("c8241d1d-d2c8-48a7-a441-b4e7b9ca27a9"), 11, 20, new TimeOnly(20, 0, 0), new DateTime(2025, 5, 9, 17, 10, 19, 670, DateTimeKind.Utc).AddTicks(9628), 35.689500000000002, 139.6917, "Station A", new TimeOnly(8, 0, 0), null });
 
             migrationBuilder.InsertData(
                 table: "AspNetUserRoles",
@@ -350,7 +351,7 @@ namespace Presentation.Data.Migrations
             migrationBuilder.InsertData(
                 table: "Bicycles",
                 columns: new[] { "Id", "BicycleStatus", "BicycleType", "CreatedAt", "CurrentStationId", "IsActive", "SerialNumber", "UpdatedAt" },
-                values: new object[] { new Guid("0a7ea05a-5c16-4eeb-a42a-8022ba438b82"), 1, 1, new DateTime(2025, 5, 8, 8, 57, 35, 421, DateTimeKind.Utc).AddTicks(8761), new Guid("c8241d1d-d2c8-48a7-a441-b4e7b9ca27a9"), true, "SN-U3URPROK", null });
+                values: new object[] { new Guid("0a7ea05a-5c16-4eeb-a42a-8022ba438b82"), 1, 1, new DateTime(2025, 5, 9, 17, 10, 19, 670, DateTimeKind.Utc).AddTicks(9384), new Guid("c8241d1d-d2c8-48a7-a441-b4e7b9ca27a9"), true, "SN-U3URPROK", null });
 
             migrationBuilder.CreateIndex(
                 name: "IX_AspNetRoleClaims_RoleId",

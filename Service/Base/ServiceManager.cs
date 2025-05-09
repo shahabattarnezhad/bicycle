@@ -29,7 +29,7 @@ public sealed class ServiceManager : IServiceManager
         SignInManager<AppUser> signInManager,
         IConfiguration configuration,
         IFileService fileService,
-        IHttpContextAccessor httpContextAccessor)
+        IUserContextService userContextService)
     {
         _authService = new Lazy<IAuthService>(() =>
                             new AuthService(mapper, userManager, signInManager, configuration));
@@ -41,10 +41,10 @@ public sealed class ServiceManager : IServiceManager
                             new BicycleService(repositoryManager, mapper, cache));
 
         _documentService = new Lazy<IDocumentService>(() =>
-                            new DocumentService(repositoryManager, mapper, cache, fileService, httpContextAccessor));
+                            new DocumentService(repositoryManager, mapper, cache, fileService, userContextService));
 
         _reservationService = new Lazy<IReservationService>(() =>
-                            new ReservationService(repositoryManager, mapper, cache, httpContextAccessor));
+                            new ReservationService(repositoryManager, mapper, cache, userContextService));
     }
 
     public IAuthService AuthService => _authService.Value;
