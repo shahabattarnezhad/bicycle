@@ -3,6 +3,7 @@ using Entities.Models;
 using Shared.DTOs.Auth;
 using Shared.DTOs.Bicycle;
 using Shared.DTOs.Document;
+using Shared.DTOs.Reservation;
 using Shared.DTOs.Station;
 using Shared.DTOs.User;
 
@@ -25,5 +26,7 @@ public class MappingProfile : Profile
 
         CreateMap<Document, DocumentDto>().ReverseMap();
         CreateMap<Document, DocumentForVerificationDto>().ReverseMap();
+
+        CreateMap<Reservation, ReservationDto>().ReverseMap();
     }
 }

@@ -12,6 +12,7 @@ public sealed class RepositoryManager : IRepositoryManager
     private readonly Lazy<IStationRepository> _stationRepository;
     private readonly Lazy<IBicycleRepository> _bicycleRepository;
     private readonly Lazy<IDocumentRepository> _documentRepository;
+    private readonly Lazy<IReservationRepository> _reservationRepository;
 
     public RepositoryManager(ApplicationDbContext context)
     {
@@ -25,11 +26,15 @@ public sealed class RepositoryManager : IRepositoryManager
 
         _documentRepository = new Lazy<IDocumentRepository>(() =>
             new DocumentRepository(_context));
+
+        _reservationRepository = new Lazy<IReservationRepository>(() =>
+            new ReservationRepository(_context));
     }
 
     public IStationRepository Station =>  _stationRepository.Value;
     public IBicycleRepository Bicycle => _bicycleRepository.Value;
     public IDocumentRepository Document => _documentRepository.Value;
+    public IReservationRepository Reservation => _reservationRepository.Value;
 
     public async Task SaveAsync(CancellationToken cancellationToken = default) 
         => await _context.SaveChangesAsync(cancellationToken);

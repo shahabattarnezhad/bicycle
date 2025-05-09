@@ -15,10 +15,11 @@ namespace Service.Base;
 
 public sealed class ServiceManager : IServiceManager
 {
+    private readonly Lazy<IAuthService> _authService;
     private readonly Lazy<IStationService> _stationService;
     private readonly Lazy<IBicycleService> _bicycleService;
     private readonly Lazy<IDocumentService> _documentService;
-    private readonly Lazy<IAuthService> _authService;
+    private readonly Lazy<IReservationService> _reservationService;
 
     public ServiceManager(
         IRepositoryManager repositoryManager,
@@ -30,6 +31,9 @@ public sealed class ServiceManager : IServiceManager
         IFileService fileService,
         IHttpContextAccessor httpContextAccessor)
     {
+        _authService = new Lazy<IAuthService>(() =>
+                            new AuthService(mapper, userManager, signInManager, configuration));
+
         _stationService = new Lazy<IStationService>(() =>
                           new StationService(repositoryManager, mapper, cache));
 
@@ -39,12 +43,13 @@ public sealed class ServiceManager : IServiceManager
         _documentService = new Lazy<IDocumentService>(() =>
                             new DocumentService(repositoryManager, mapper, cache, fileService, httpContextAccessor));
 
-        _authService = new Lazy<IAuthService>(() =>
-                            new AuthService(mapper, userManager, signInManager, configuration));
+        _reservationService = new Lazy<IReservationService>(() =>
+                            new ReservationService(repositoryManager, mapper, cache, httpContextAccessor));
     }
 
+    public IAuthService AuthService => _authService.Value;
     public IStationService StationService => _stationService.Value;
     public IBicycleService BicycleService => _bicycleService.Value;
     public IDocumentService DocumentService => _documentService.Value;
-    public IAuthService AuthService => _authService.Value;
+    public IReservationService ReservationService => _reservationService.Value;
 }
