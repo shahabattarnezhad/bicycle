@@ -1,7 +1,6 @@
 ﻿using Application.Contracts.Base;
 using AutoMapper;
 using Entities.Models;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Service.Contracts.Base;
@@ -20,6 +19,8 @@ public sealed class ServiceManager : IServiceManager
     private readonly Lazy<IBicycleService> _bicycleService;
     private readonly Lazy<IDocumentService> _documentService;
     private readonly Lazy<IReservationService> _reservationService;
+    private readonly Lazy<IBicycleGpsService> _bicycleGpsService;
+    private readonly Lazy<IPaymentService> _paymentService;
 
     public ServiceManager(
         IRepositoryManager repositoryManager,
@@ -45,6 +46,12 @@ public sealed class ServiceManager : IServiceManager
 
         _reservationService = new Lazy<IReservationService>(() =>
                             new ReservationService(repositoryManager, mapper, cache, userContextService));
+
+        _bicycleGpsService = new Lazy<IBicycleGpsService>(() =>
+                            new BicycleGpsService(repositoryManager, mapper, cache));
+
+        _paymentService = new Lazy<IPaymentService>(() =>
+                            new PaymentService(repositoryManager, mapper, cache, userContextService));
     }
 
     public IAuthService AuthService => _authService.Value;
@@ -52,4 +59,6 @@ public sealed class ServiceManager : IServiceManager
     public IBicycleService BicycleService => _bicycleService.Value;
     public IDocumentService DocumentService => _documentService.Value;
     public IReservationService ReservationService => _reservationService.Value;
+    public IBicycleGpsService BicycleGpsService => _bicycleGpsService.Value;
+    public IPaymentService PaymentService => _paymentService.Value;
 }

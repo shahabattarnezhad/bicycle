@@ -10,4 +10,6 @@ public interface IServiceManager
     IBicycleService BicycleService { get; }
     IDocumentService DocumentService { get; }
     IReservationService ReservationService { get; }
+    IBicycleGpsService BicycleGpsService { get; }
+    IPaymentService PaymentService { get; }
 }

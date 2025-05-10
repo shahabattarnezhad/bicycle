@@ -9,6 +9,8 @@ public interface IRepositoryManager
     IBicycleRepository Bicycle { get; }
     IDocumentRepository Document { get; }
     IReservationRepository Reservation { get; }
+    IBicycleGpsRepository BicycleGps { get; }
+    IPaymentRepository Payment { get; }
 
     Task<IDbContextTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default);
     Task SaveAsync(CancellationToken cancellationToken = default);
