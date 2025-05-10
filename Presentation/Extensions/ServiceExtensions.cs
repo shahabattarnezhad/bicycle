@@ -105,6 +105,16 @@ public static class ServiceExtensions
         services.Configure<JwtSettings>(configuration.GetSection("JwtSettings"));
     }
 
+    public static void ConfigureCors(this IServiceCollection services) =>
+        services.AddCors(options =>
+        {
+            options.AddPolicy("CorsPolicy", builder =>
+            builder.AllowAnyOrigin()
+                   .AllowAnyMethod()
+                   .AllowAnyHeader()
+                   .WithExposedHeaders("X-Pagination"));
+        });
+
     public static void ConfigureSwagger(this IServiceCollection services)
     {
         services.AddSwaggerGen(s =>

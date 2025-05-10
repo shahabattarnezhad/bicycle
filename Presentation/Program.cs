@@ -6,6 +6,7 @@ using Service.Contracts.Base;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.ConfigureCors();
 builder.Services.AddScoped<SeederRunner>();
 
 builder.Services.AddAutoMapper(typeof(Program));
@@ -42,6 +43,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseMiddleware<ExceptionHandlingMiddleware>();
+app.UseCors("CorsPolicy");
 app.UseAuthentication();
 app.UseAuthorization();
 
