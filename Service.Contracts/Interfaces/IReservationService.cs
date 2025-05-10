@@ -12,5 +12,7 @@ public interface IReservationService
 
     Task<ApiResponse<ReservationDto>> CreateAsync(ReservationForCreationDto entityForCreation, CancellationToken cancellationToken = default);
 
+    Task<ApiResponse<string>> ReturnBikeAsync(ReservationForReturnDto dto, CancellationToken cancellationToken = default);
+
     Task<ApiResponse<string>> DeleteAsync(Guid entityId, bool trackChanges, CancellationToken cancellationToken = default);
 }

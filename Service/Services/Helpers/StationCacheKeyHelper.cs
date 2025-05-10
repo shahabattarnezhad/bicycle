@@ -2,6 +2,8 @@
 
 public static class StationCacheKeyHelper
 {
+    public static string StationPrefix => "stations";
+
     public static string GetPagedKey(string prefix, int page, int size)
         => $"{prefix}_page_{page}_size_{size}";
 

@@ -46,6 +46,22 @@ public class ReservationsController : ApiControllerBase
         return CreatedResponse("GetReservationById", new { id = response.Data?.Id }, response.Data, response.Message);
     }
 
+    [Authorize]
+    [HttpPut("{id:guid}")]
+    public async Task<IActionResult> ReturnBicycle(Guid id, [FromBody] ReservationForReturnDto returnDto, CancellationToken cancellationToken)
+    {
+        if (!ModelState.IsValid)
+            return InvalidModelResponse();
+
+        if (id != returnDto.ReservationId)
+            return Error("Id in the route does not match the id in the body");
+
+        var response = 
+            await _service.ReservationService.ReturnBikeAsync(returnDto, cancellationToken);
+
+        return Success(response.Data, response.Message);
+    }
+
     [Authorize(Roles = "Admin")]
     [HttpDelete("{id:guid}")]
     public async Task<IActionResult> Delete(Guid id, CancellationToken cancellationToken)

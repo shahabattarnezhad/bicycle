@@ -8,6 +8,7 @@ using Service.Contracts.Interfaces.Auth;
 using Service.Services.Helpers;
 using Shared.DTOs.Reservation;
 using Shared.Enums;
+using Shared.Helpers;
 using Shared.Requests;
 using Shared.Responses;
 
@@ -58,7 +59,6 @@ internal sealed class ReservationService : IReservationService
     {
 
         if (_userContextService.UserStatus != UserStatus.Approved.ToString())
-            //throw new GeneralBadRequestException("User is not approved");
             throw new NoAccessException("Your account is not approved yet.");
 
         var userId = _userContextService.UserId;
@@ -162,6 +162,72 @@ internal sealed class ReservationService : IReservationService
         _cache.RemoveByPrefix(ReservationCacheKeyHelper.ReservationPrefix);
 
         return new ApiResponse<string>(null, "Station deleted successfully");
+    }
+
+    public async Task<ApiResponse<string>> ReturnBikeAsync(ReservationForReturnDto dto, CancellationToken cancellationToken = default)
+    {
+        var userId = _userContextService.UserId;
+
+        // شروع تراکنش
+        using var transaction = await _repository.BeginTransactionAsync(cancellationToken);
+
+        try
+        {
+            // 1. پیدا کردن رزرو فعال
+            var reservation = 
+                await _repository.Reservation.GetAsync(dto.ReservationId, trackChanges: true, cancellationToken);
+
+            if (reservation == null || reservation.ReservationStatus != ReservationStatus.Active || reservation.UserId != userId)
+                throw new GeneralBadRequestException("No active reservation found for return.");
+
+            // 2. بررسی زمان تحویل
+            var now = DateTime.UtcNow;
+            if (now < reservation.StartTime)
+                throw new GeneralBadRequestException("Return time cannot be before reservation start time.");
+
+            // 3. محاسبه هزینه نهایی
+            var finalCost = CalculateCost(reservation.StartTime, now);
+            reservation.EndTime = now;
+            reservation.TotalCost = finalCost;
+            reservation.ReservationStatus = ReservationStatus.Completed;
+
+            // 4. بروزرسانی دوچرخه
+            var bicycle = 
+                await _repository.Bicycle.GetAsync(reservation.BicycleId, trackChanges: true, cancellationToken);
+
+            if (bicycle == null)
+                throw new GeneralBadRequestException("Bicycle not found.");
+
+            bicycle.BicycleStatus = BicycleStatus.Available;
+            bicycle.CurrentStationId = dto.ReturnStationId;
+
+            // 5. افزایش موجودی ایستگاه مقصد
+            var returnStation = 
+                await _repository.Station.GetAsync(dto.ReturnStationId, trackChanges: true, cancellationToken);
+
+            if (returnStation == null)
+                throw new GeneralBadRequestException("Return station not found.");
+
+            returnStation.AvailableBicycles++;
+
+            // 6. ذخیره همه تغییرات
+            await _repository.SaveAsync(cancellationToken);
+            await transaction.CommitAsync(cancellationToken);
+
+            // 7. پاکسازی کش
+            _cache.RemoveByPrefix(ReservationCacheKeyHelper.ReservationPrefix);
+            _cache.Remove(ReservationCacheKeyHelper.GenerateReservationKey(dto.ReservationId));
+            _cache.RemoveByPrefix(BicycleCacheKeyHelper.BicyclePrefix(returnStation.Id));
+            _cache.RemoveByPrefix(BicycleCacheKeyHelper.BicyclePrefix(bicycle.CurrentStationId));
+            _cache.RemoveByPrefix(StationCacheKeyHelper.StationPrefix);
+
+            return new ApiResponse<string>(null, $"Bike returned successfully. Final cost: {finalCost} Toman.");
+        }
+        catch
+        {
+            await transaction.RollbackAsync(cancellationToken);
+            throw;
+        }
     }
 
     private async Task<Reservation> FindEntity(Guid entityId, bool trackChanges, CancellationToken cancellationToken = default)
