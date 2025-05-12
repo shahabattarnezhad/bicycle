@@ -99,31 +99,33 @@ internal sealed class AuthService : IAuthService
         return new ApiResponse<AppUserDto>(userDto, "User registered successfully");
     }
 
-    public async Task<bool> LoginUser(LoginDto loginDto)
+    public async Task<ApiResponse<AppUserDto>> LoginAsync(LoginDto loginDto)
     {
         _user = await _userManager.FindByNameAsync(loginDto.UserName!);
 
-        if (_user != null)
+        if (_user is null)
         {
-            var result = await _signInManager.PasswordSignInAsync(
-                    _user!.UserName!,
-                    loginDto.Password!,
-                    loginDto.RememberMe,
-                    lockoutOnFailure: true);
-
-            if (!result.Succeeded)
-            {
-                await _userManager.AccessFailedAsync(_user!);
-                return false;
-            }
-            else
-            {
-                await _userManager.ResetAccessFailedCountAsync(_user!);
-
-                return true;
-            }
+            return new ApiResponse<AppUserDto>("Username or password is incorrect.");
         }
-        else
-            return false;
+
+        //var result = await _signInManager.PasswordSignInAsync(
+        //            _user!.UserName!,
+        //            loginDto.Password!,
+        //            loginDto.RememberMe,
+        //            lockoutOnFailure: true);
+
+        var result =
+            await _signInManager.CheckPasswordSignInAsync(_user!, loginDto.Password, false);
+
+        if (!result.Succeeded)
+        {
+            return new ApiResponse<AppUserDto>("Username or password is incorrect.");
+        }
+
+        //if (user.Status != UserStatus.Approved)
+        //    throw new NoAccessException("Your account is not approved yet.");
+
+        var userDto = _mapper.Map<AppUserDto>(_user);
+        return new ApiResponse<AppUserDto>(userDto, "User logged in successfully");
     }
 }

@@ -38,6 +38,9 @@ public class AuthController : ApiControllerBase
     [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status201Created)]
     public async Task<IActionResult> Register([FromBody] RegisterDto registerDto, CancellationToken cancellationToken)
     {
+        if (!ModelState.IsValid)
+            return InvalidModelResponse();
+
         var result =
             await _service.AuthService.RegisterAsync(registerDto);
 
@@ -50,24 +53,31 @@ public class AuthController : ApiControllerBase
     }
 
     [HttpPost("login")]
-    public async Task<IActionResult> Login(LoginDto loginDto, CancellationToken cancellationToken)
+    [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> Login([FromBody] LoginDto loginDto, CancellationToken cancellationToken)
     {
         if (!ModelState.IsValid)
             return InvalidModelResponse();
 
-        var user = await _userManager.FindByNameAsync(loginDto.UserName);
-        if (user == null)
-            return Unauthorized("Invalid username or password.");
+        var loginResponse = await _service.AuthService.LoginAsync(loginDto);
 
-        var result = await _signInManager.CheckPasswordSignInAsync(user, loginDto.Password, false);
-        if (!result.Succeeded)
-            return Unauthorized("Invalid username or password.");
+        if (!loginResponse.Success)
+        {
+            return BadRequest(loginResponse);
+        }
 
-        //if (user.Status != UserStatus.Approved)
-        //    throw new NoAccessException("Your account is not approved yet.");
+        var user = new AppUser
+        {
+            Id = loginResponse.Data.Id,
+            UserName = loginResponse.Data.UserName,
+            FirstName = loginResponse.Data.FirstName,
+            LastName = loginResponse.Data.LastName,
+            Status = loginResponse.Data.Status
+        };
 
         var token = await _service.AuthService.CreateTokenAsync(user);
 
-        return Success(token, "ورود با موفقیت انجام شد");
+        return Success(token, "Login successful");
     }
 }

@@ -11,5 +11,5 @@ public interface IAuthService
 
     Task<ApiResponse<AppUserDto>> RegisterAsync(RegisterDto registerDto);
 
-    Task<bool> LoginUser(LoginDto loginDto);
+    Task<ApiResponse<AppUserDto>> LoginAsync(LoginDto loginDto);
 }
