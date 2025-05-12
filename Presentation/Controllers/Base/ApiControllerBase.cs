@@ -53,6 +53,6 @@ public abstract class ApiControllerBase : ControllerBase
             .SelectMany(kvp => kvp.Value!.Errors.Select(e => e.ErrorMessage))
             .ToList();
 
-        return BadRequest(new ApiResponse<string>("Validation failed", errors));
+        return BadRequest(new ApiResponse<string>("لطفا نام کاربری و کلمه ی عبور را بدرستی وارد کنید", errors));
     }
 }

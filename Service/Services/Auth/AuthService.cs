@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using Service.Contracts.Interfaces.Auth;
+using Service.Services.Constants;
 using Shared.DTOs.Auth;
 using Shared.DTOs.User;
 using Shared.Responses;
@@ -18,17 +19,24 @@ internal sealed class AuthService : IAuthService
 {
     private readonly IMapper _mapper;
     private readonly UserManager<AppUser> _userManager;
+    private readonly RoleManager<AppRole> _roleManager;
     private readonly SignInManager<AppUser> _signInManager;
     private readonly IConfiguration _configuration;
 
     private AppUser? _user;
 
-    public AuthService(IMapper mapper, UserManager<AppUser> userManager, SignInManager<AppUser> signInManager, IConfiguration configuration)
+    public AuthService(
+        IMapper mapper,
+        UserManager<AppUser> userManager,
+        SignInManager<AppUser> signInManager,
+        IConfiguration configuration,
+        RoleManager<AppRole> roleManager)
     {
         _mapper = mapper;
         _userManager = userManager;
         _signInManager = signInManager;
         _configuration = configuration;
+        _roleManager = roleManager;
     }
 
     public async Task<string> CreateTokenAsync(AppUser user)
@@ -72,6 +80,19 @@ internal sealed class AuthService : IAuthService
         {
             var errors = result.Errors.Select(e => e.Description).ToList();
             return new ApiResponse<AppUserDto>("User registration failed", errors);
+        }
+
+        var roleExists = await _roleManager.RoleExistsAsync(RoleConstants.Customer);
+        if (!roleExists)
+        {
+            return new ApiResponse<AppUserDto>("Role 'Customer' does not exist");
+        }
+
+        var roleResult = await _userManager.AddToRoleAsync(appUser, RoleConstants.Customer);
+        if (!roleResult.Succeeded)
+        {
+            var errors = roleResult.Errors.Select(e => e.Description).ToList();
+            return new ApiResponse<AppUserDto>("Failed to assign role", errors);
         }
 
         var userDto = _mapper.Map<AppUserDto>(appUser);

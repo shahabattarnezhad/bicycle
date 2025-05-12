@@ -1,14 +1,23 @@
 ﻿using Entities.Models;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
-using Repository.Configuration;
 using Repository.Configuration.DataSeeding;
 using Repository.Configuration.ModelsConfig;
-using System.Reflection.Emit;
 
 namespace Repository.Data;
 
-public class ApplicationDbContext : IdentityDbContext<AppUser, AppRole, string>
+//public class ApplicationDbContext : IdentityDbContext<AppUser, AppRole, string>
+public class ApplicationDbContext : IdentityDbContext<
+                                                      AppUser,
+                                                      AppRole,
+                                                      string,
+                                                      IdentityUserClaim<string>,
+                                                      AppUserRole,
+                                                      IdentityUserLogin<string>,
+                                                      IdentityRoleClaim<string>,
+                                                      IdentityUserToken<string>
+                                                     >
 {
     public ApplicationDbContext(DbContextOptions options) : base(options)
     {
@@ -19,6 +28,7 @@ public class ApplicationDbContext : IdentityDbContext<AppUser, AppRole, string>
         base.OnModelCreating(builder);
 
         builder.ApplyConfiguration(new UserConfiguration());
+        builder.ApplyConfiguration(new AppUserRoleConfiguration());
         builder.ApplyConfiguration(new BicycleConfiguration());
         builder.ApplyConfiguration(new BicycleGpsConfiguration());
         builder.ApplyConfiguration(new DocumentConfiguration());

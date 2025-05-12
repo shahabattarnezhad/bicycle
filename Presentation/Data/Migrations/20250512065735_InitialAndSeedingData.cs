@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Presentation.Data.Migrations
 {
     /// <inheritdoc />
-    public partial class Initial : Migration
+    public partial class InitialAndSeedingData : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -142,8 +142,7 @@ namespace Presentation.Data.Migrations
                 columns: table => new
                 {
                     UserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    RoleId = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    Discriminator = table.Column<string>(type: "nvarchar(34)", maxLength: 34, nullable: false)
+                    RoleId = table.Column<string>(type: "nvarchar(450)", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -336,22 +335,22 @@ namespace Presentation.Data.Migrations
             migrationBuilder.InsertData(
                 table: "AspNetUsers",
                 columns: new[] { "Id", "AccessFailedCount", "ConcurrencyStamp", "Email", "EmailConfirmed", "FirstName", "LastName", "LockoutEnabled", "LockoutEnd", "NormalizedEmail", "NormalizedUserName", "PasswordHash", "PhoneNumber", "PhoneNumberConfirmed", "SecurityStamp", "Status", "TwoFactorEnabled", "UserName" },
-                values: new object[] { "43362001-32cd-482e-a7c0-e4d2e528c94e", 0, "bcb9c0e6-1b4e-4bfa-a036-7bff4ccae466", "atarnezhad@gmail.com", true, "Shahab", "Attarnejad", true, null, "ATARNEZHAD@GMAIL.COM", "ATARNEZHAD", "AQAAAAIAAYagAAAAEBkA0pnZ74igZLFNsaFSRDu7NialqLTcH2LKxUp//Zo5/MhJRsFtnC6Hv2BOA+fC0g==", null, false, "", 3, false, "atarnezhad" });
+                values: new object[] { "43362001-32cd-482e-a7c0-e4d2e528c94e", 0, "9cda61a8-6347-4542-8c78-959b43818d3b", "atarnezhad@gmail.com", true, "Shahab", "Attarnejad", true, null, "ATARNEZHAD@GMAIL.COM", "ATARNEZHAD", "AQAAAAIAAYagAAAAEMPZNemW4eMQdzXvpHIePbMI9MeWjr4472NZkn6OB9r0CzrndMbahgOUrfMqaQ2JHw==", null, false, "", 3, false, "atarnezhad" });
 
             migrationBuilder.InsertData(
                 table: "Stations",
                 columns: new[] { "Id", "AvailableBicycles", "Capacity", "CloseTime", "CreatedAt", "Latitude", "Longitude", "Name", "OpenTime", "UpdatedAt" },
-                values: new object[] { new Guid("c8241d1d-d2c8-48a7-a441-b4e7b9ca27a9"), 11, 20, new TimeOnly(20, 0, 0), new DateTime(2025, 5, 9, 17, 10, 19, 670, DateTimeKind.Utc).AddTicks(9628), 35.689500000000002, 139.6917, "Station A", new TimeOnly(8, 0, 0), null });
+                values: new object[] { new Guid("c8241d1d-d2c8-48a7-a441-b4e7b9ca27a9"), 11, 20, new TimeOnly(20, 0, 0), new DateTime(2025, 5, 12, 6, 57, 33, 30, DateTimeKind.Utc).AddTicks(5483), 35.689500000000002, 139.6917, "Station A", new TimeOnly(8, 0, 0), null });
 
             migrationBuilder.InsertData(
                 table: "AspNetUserRoles",
-                columns: new[] { "RoleId", "UserId", "Discriminator" },
-                values: new object[] { "b09cf6dc-a3aa-4cdd-b1e9-f22a1d5d3149", "43362001-32cd-482e-a7c0-e4d2e528c94e", "AppUserRole" });
+                columns: new[] { "RoleId", "UserId" },
+                values: new object[] { "b09cf6dc-a3aa-4cdd-b1e9-f22a1d5d3149", "43362001-32cd-482e-a7c0-e4d2e528c94e" });
 
             migrationBuilder.InsertData(
                 table: "Bicycles",
                 columns: new[] { "Id", "BicycleStatus", "BicycleType", "CreatedAt", "CurrentStationId", "IsActive", "SerialNumber", "UpdatedAt" },
-                values: new object[] { new Guid("0a7ea05a-5c16-4eeb-a42a-8022ba438b82"), 1, 1, new DateTime(2025, 5, 9, 17, 10, 19, 670, DateTimeKind.Utc).AddTicks(9384), new Guid("c8241d1d-d2c8-48a7-a441-b4e7b9ca27a9"), true, "SN-U3URPROK", null });
+                values: new object[] { new Guid("0a7ea05a-5c16-4eeb-a42a-8022ba438b82"), 1, 1, new DateTime(2025, 5, 12, 6, 57, 33, 30, DateTimeKind.Utc).AddTicks(5323), new Guid("c8241d1d-d2c8-48a7-a441-b4e7b9ca27a9"), true, "SN-U3URPROK", null });
 
             migrationBuilder.CreateIndex(
                 name: "IX_AspNetRoleClaims_RoleId",

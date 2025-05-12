@@ -12,8 +12,8 @@ using Repository.Data;
 namespace Presentation.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250509171021_Initial")]
-    partial class Initial
+    [Migration("20250512065735_InitialAndSeedingData")]
+    partial class InitialAndSeedingData
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -154,7 +154,7 @@ namespace Presentation.Data.Migrations
                         {
                             Id = "43362001-32cd-482e-a7c0-e4d2e528c94e",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "bcb9c0e6-1b4e-4bfa-a036-7bff4ccae466",
+                            ConcurrencyStamp = "9cda61a8-6347-4542-8c78-959b43818d3b",
                             Email = "atarnezhad@gmail.com",
                             EmailConfirmed = true,
                             FirstName = "Shahab",
@@ -162,12 +162,34 @@ namespace Presentation.Data.Migrations
                             LockoutEnabled = true,
                             NormalizedEmail = "ATARNEZHAD@GMAIL.COM",
                             NormalizedUserName = "ATARNEZHAD",
-                            PasswordHash = "AQAAAAIAAYagAAAAEBkA0pnZ74igZLFNsaFSRDu7NialqLTcH2LKxUp//Zo5/MhJRsFtnC6Hv2BOA+fC0g==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEMPZNemW4eMQdzXvpHIePbMI9MeWjr4472NZkn6OB9r0CzrndMbahgOUrfMqaQ2JHw==",
                             PhoneNumberConfirmed = false,
                             SecurityStamp = "",
                             Status = 3,
                             TwoFactorEnabled = false,
                             UserName = "atarnezhad"
+                        });
+                });
+
+            modelBuilder.Entity("Entities.Models.AppUserRole", b =>
+                {
+                    b.Property<string>("UserId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("RoleId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("UserId", "RoleId");
+
+                    b.HasIndex("RoleId");
+
+                    b.ToTable("AspNetUserRoles", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            UserId = "43362001-32cd-482e-a7c0-e4d2e528c94e",
+                            RoleId = "b09cf6dc-a3aa-4cdd-b1e9-f22a1d5d3149"
                         });
                 });
 
@@ -212,7 +234,7 @@ namespace Presentation.Data.Migrations
                             Id = new Guid("0a7ea05a-5c16-4eeb-a42a-8022ba438b82"),
                             BicycleStatus = 1,
                             BicycleType = 1,
-                            CreatedAt = new DateTime(2025, 5, 9, 17, 10, 19, 670, DateTimeKind.Utc).AddTicks(9384),
+                            CreatedAt = new DateTime(2025, 5, 12, 6, 57, 33, 30, DateTimeKind.Utc).AddTicks(5323),
                             CurrentStationId = new Guid("c8241d1d-d2c8-48a7-a441-b4e7b9ca27a9"),
                             IsActive = true,
                             SerialNumber = "SN-U3URPROK"
@@ -430,7 +452,7 @@ namespace Presentation.Data.Migrations
                             AvailableBicycles = 11,
                             Capacity = 20,
                             CloseTime = new TimeOnly(20, 0, 0),
-                            CreatedAt = new DateTime(2025, 5, 9, 17, 10, 19, 670, DateTimeKind.Utc).AddTicks(9628),
+                            CreatedAt = new DateTime(2025, 5, 12, 6, 57, 33, 30, DateTimeKind.Utc).AddTicks(5483),
                             Latitude = 35.689500000000002,
                             Longitude = 139.6917,
                             Name = "Station A",
@@ -510,30 +532,6 @@ namespace Presentation.Data.Migrations
                     b.ToTable("AspNetUserLogins", (string)null);
                 });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<string>", b =>
-                {
-                    b.Property<string>("UserId")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<string>("RoleId")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<string>("Discriminator")
-                        .IsRequired()
-                        .HasMaxLength(34)
-                        .HasColumnType("nvarchar(34)");
-
-                    b.HasKey("UserId", "RoleId");
-
-                    b.HasIndex("RoleId");
-
-                    b.ToTable("AspNetUserRoles", (string)null);
-
-                    b.HasDiscriminator().HasValue("IdentityUserRole<string>");
-
-                    b.UseTphMappingStrategy();
-                });
-
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<string>", b =>
                 {
                     b.Property<string>("UserId")
@@ -555,16 +553,17 @@ namespace Presentation.Data.Migrations
 
             modelBuilder.Entity("Entities.Models.AppUserRole", b =>
                 {
-                    b.HasBaseType("Microsoft.AspNetCore.Identity.IdentityUserRole<string>");
+                    b.HasOne("Entities.Models.AppRole", null)
+                        .WithMany("UserRoles")
+                        .HasForeignKey("RoleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
-                    b.HasDiscriminator().HasValue("AppUserRole");
-
-                    b.HasData(
-                        new
-                        {
-                            UserId = "43362001-32cd-482e-a7c0-e4d2e528c94e",
-                            RoleId = "b09cf6dc-a3aa-4cdd-b1e9-f22a1d5d3149"
-                        });
+                    b.HasOne("Entities.Models.AppUser", null)
+                        .WithMany("UserRoles")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("Entities.Models.Bicycle", b =>
@@ -671,21 +670,6 @@ namespace Presentation.Data.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<string>", b =>
-                {
-                    b.HasOne("Entities.Models.AppRole", null)
-                        .WithMany()
-                        .HasForeignKey("RoleId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Entities.Models.AppUser", null)
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<string>", b =>
                 {
                     b.HasOne("Entities.Models.AppUser", null)
@@ -695,6 +679,11 @@ namespace Presentation.Data.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("Entities.Models.AppRole", b =>
+                {
+                    b.Navigation("UserRoles");
+                });
+
             modelBuilder.Entity("Entities.Models.AppUser", b =>
                 {
                     b.Navigation("Documents");
@@ -702,6 +691,8 @@ namespace Presentation.Data.Migrations
                     b.Navigation("Payments");
 
                     b.Navigation("Reservations");
+
+                    b.Navigation("UserRoles");
 
                     b.Navigation("VerifiedDocuments");
                 });

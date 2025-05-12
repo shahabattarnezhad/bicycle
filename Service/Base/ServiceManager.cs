@@ -27,13 +27,14 @@ public sealed class ServiceManager : IServiceManager
         IMapper mapper,
         IMemoryCacheService cache,
         UserManager<AppUser> userManager,
+        RoleManager<AppRole> roleManager,
         SignInManager<AppUser> signInManager,
         IConfiguration configuration,
         IFileService fileService,
         IUserContextService userContextService)
     {
         _authService = new Lazy<IAuthService>(() =>
-                            new AuthService(mapper, userManager, signInManager, configuration));
+                            new AuthService(mapper, userManager, signInManager, configuration, roleManager));
 
         _stationService = new Lazy<IStationService>(() =>
                           new StationService(repositoryManager, mapper, cache));

@@ -15,4 +15,5 @@ public class AppUser : IdentityUser
     public ICollection<Document>? VerifiedDocuments { get; set; }
     public ICollection<Reservation>? Reservations { get; set; }
     public ICollection<Payment>? Payments { get; set; }
+    public ICollection<AppUserRole>? UserRoles { get; set; }
 }

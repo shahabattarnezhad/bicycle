@@ -36,7 +36,7 @@ public class AuthController : ApiControllerBase
 
     [HttpPost("register")]
     [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status201Created)]
-    public async Task<IActionResult> Register([FromForm] RegisterDto registerDto, CancellationToken cancellationToken)
+    public async Task<IActionResult> Register([FromBody] RegisterDto registerDto, CancellationToken cancellationToken)
     {
         var result =
             await _service.AuthService.RegisterAsync(registerDto);
