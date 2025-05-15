@@ -31,7 +31,7 @@ public class SeederRunner
             return;
         }
 
-        var stations = StationFaker.GenerateStations(5);
+        var stations = StationFaker.GenerateStations(10);
         foreach (var station in stations)
             repository.Station.CreateEntity(station);
 

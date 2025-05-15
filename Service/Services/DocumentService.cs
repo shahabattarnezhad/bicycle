@@ -38,18 +38,21 @@ internal sealed class DocumentService : IDocumentService
 
     public async Task<ApiResponse<IEnumerable<DocumentDto>>> GetAllAsync(DocumentParameters parameters, bool trackChanges, CancellationToken cancellationToken = default)
     {
-        var prefix = DocumentCacheKeyHelper.DocumentPrefix;
-        var cacheKey = DocumentCacheKeyHelper.GenerateDocumentListKey(parameters);
+        //var prefix = DocumentCacheKeyHelper.DocumentPrefix;
+        //var cacheKey = DocumentCacheKeyHelper.GenerateDocumentListKey(parameters);
 
-        var pagedDocuments = await _cache.GetOrCreateAsync(
-            cacheKey,
-            async () =>
-            {
-                return await _repository.Document.GetAllAsync(parameters, trackChanges, cancellationToken);
-            },
-            TimeSpan.FromMinutes(10),
-            prefix
-        );
+        //var pagedDocuments = await _cache.GetOrCreateAsync(
+        //    cacheKey,
+        //    async () =>
+        //    {
+        //        return await _repository.Document.GetAllAsync(parameters, trackChanges, cancellationToken);
+        //    },
+        //    TimeSpan.FromMinutes(10),
+        //    prefix
+        //);
+
+        var pagedDocuments =
+            await _repository.Document.GetAllAsync(parameters, trackChanges, cancellationToken);
 
         var entitiesDto =
             _mapper.Map<IEnumerable<DocumentDto>>(pagedDocuments);
@@ -77,7 +80,7 @@ internal sealed class DocumentService : IDocumentService
         _repository.Document.CreateEntity(entity);
         await _repository.SaveAsync(cancellationToken);
 
-        _cache.RemoveByPrefix(DocumentCacheKeyHelper.DocumentPrefix);
+        //_cache.RemoveByPrefix(DocumentCacheKeyHelper.DocumentPrefix);
 
         var entityToReturn =
             _mapper.Map<DocumentDto>(entity);
@@ -88,14 +91,17 @@ internal sealed class DocumentService : IDocumentService
 
     public async Task<ApiResponse<DocumentDto>>? GetAsync(Guid entityId, bool trackChanges, CancellationToken cancellationToken = default)
     {
-        var cacheKey = DocumentCacheKeyHelper.GenerateDocumentKey(entityId);
+        //var cacheKey = DocumentCacheKeyHelper.GenerateDocumentKey(entityId);
 
-        var entity = await _cache.GetOrCreateAsync(
-            cacheKey,
-            async () => await FindEntity(entityId, trackChanges, cancellationToken),
-            TimeSpan.FromMinutes(10),
-            DocumentCacheKeyHelper.DocumentPrefix
-        );
+        //var entity = await _cache.GetOrCreateAsync(
+        //    cacheKey,
+        //    async () => await FindEntity(entityId, trackChanges, cancellationToken),
+        //    TimeSpan.FromMinutes(10),
+        //    DocumentCacheKeyHelper.DocumentPrefix
+        //);
+
+        var entity =
+            await FindEntity(entityId, trackChanges, cancellationToken);
 
         var entityDto =
             _mapper.Map<DocumentDto>(entity);
@@ -113,8 +119,8 @@ internal sealed class DocumentService : IDocumentService
 
         await _repository.SaveAsync(cancellationToken);
 
-        _cache.Remove(DocumentCacheKeyHelper.GenerateDocumentKey(entityId));
-        _cache.RemoveByPrefix(DocumentCacheKeyHelper.DocumentPrefix);
+        //_cache.Remove(DocumentCacheKeyHelper.GenerateDocumentKey(entityId));
+        //_cache.RemoveByPrefix(DocumentCacheKeyHelper.DocumentPrefix);
 
         return new ApiResponse<string>(null, "Document updated successfully");
     }

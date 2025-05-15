@@ -29,19 +29,22 @@ internal sealed class BicycleGpsService : IBicycleGpsService
 
     public async Task<ApiResponse<IEnumerable<BicycleGpsDto>>> GetAllAsync(BicycleGpsParameters parameters, bool trackChanges, CancellationToken cancellationToken = default)
     {
-        var prefix = BicycleGpsCacheKeyHelper.BicycleGpsPrefix;
-        var cacheKey =
-            BicycleGpsCacheKeyHelper.GetPagedKey( parameters.PageNumber, parameters.PageSize);
+        //var prefix = BicycleGpsCacheKeyHelper.BicycleGpsPrefix;
+        //var cacheKey =
+        //    BicycleGpsCacheKeyHelper.GetPagedKey( parameters.PageNumber, parameters.PageSize);
 
-        var pagedBicycleGpsList = await _cache.GetOrCreateAsync(
-            cacheKey,
-            async () =>
-            {
-                return await _repository.BicycleGps.GetAllAsync(parameters, trackChanges, cancellationToken);
-            },
-            TimeSpan.FromMinutes(30),
-            CacheKeyPrefixes.BicycleGps
-        );
+        //var pagedBicycleGpsList = await _cache.GetOrCreateAsync(
+        //    cacheKey,
+        //    async () =>
+        //    {
+        //        return await _repository.BicycleGps.GetAllAsync(parameters, trackChanges, cancellationToken);
+        //    },
+        //    TimeSpan.FromMinutes(30),
+        //    CacheKeyPrefixes.BicycleGps
+        //);
+
+        var pagedBicycleGpsList =
+            await _repository.BicycleGps.GetAllAsync(parameters, trackChanges, cancellationToken);
 
         var entitiesDto =
             _mapper.Map<IEnumerable<BicycleGpsDto>>(pagedBicycleGpsList);
@@ -51,15 +54,18 @@ internal sealed class BicycleGpsService : IBicycleGpsService
 
     public async Task<ApiResponse<BicycleGpsDto>>? GetAsync(Guid entityId, bool trackChanges, CancellationToken cancellationToken = default)
     {
-        var prefix = BicycleGpsCacheKeyHelper.BicycleGpsPrefix;
-        var cacheKey = BicycleGpsCacheKeyHelper.GetEntityKey(entityId);
+        //var prefix = BicycleGpsCacheKeyHelper.BicycleGpsPrefix;
+        //var cacheKey = BicycleGpsCacheKeyHelper.GetEntityKey(entityId);
 
-        var entity = await _cache.GetOrCreateAsync(
-            cacheKey,
-            async () => await FindEntity(entityId, trackChanges, cancellationToken),
-            TimeSpan.FromMinutes(10),
-            CacheKeyPrefixes.BicycleGps
-        );
+        //var entity = await _cache.GetOrCreateAsync(
+        //    cacheKey,
+        //    async () => await FindEntity(entityId, trackChanges, cancellationToken),
+        //    TimeSpan.FromMinutes(10),
+        //    CacheKeyPrefixes.BicycleGps
+        //);
+
+        var entity =
+            await FindEntity(entityId, trackChanges, cancellationToken);
 
         var entityDto =
             _mapper.Map<BicycleGpsDto>(entity);
@@ -75,7 +81,7 @@ internal sealed class BicycleGpsService : IBicycleGpsService
         _repository.BicycleGps.CreateEntity(entity);
         await _repository.SaveAsync(cancellationToken);
 
-        _cache.RemoveByPrefix(BicycleGpsCacheKeyHelper.BicycleGpsPrefix);
+        //_cache.RemoveByPrefix(BicycleGpsCacheKeyHelper.BicycleGpsPrefix);
 
         var entityToReturn =
             _mapper.Map<BicycleGpsDto>(entity);
@@ -91,8 +97,8 @@ internal sealed class BicycleGpsService : IBicycleGpsService
         _repository.BicycleGps.DeleteEntity(entity);
         await _repository.SaveAsync(cancellationToken);
 
-        _cache.Remove(BicycleGpsCacheKeyHelper.GetEntityKey( entityId));
-        _cache.RemoveByPrefix(BicycleGpsCacheKeyHelper.BicycleGpsPrefix);
+        //_cache.Remove(BicycleGpsCacheKeyHelper.GetEntityKey( entityId));
+        //_cache.RemoveByPrefix(BicycleGpsCacheKeyHelper.BicycleGpsPrefix);
 
         return new ApiResponse<string>(null, "BicycleGps deleted successfully");
     }

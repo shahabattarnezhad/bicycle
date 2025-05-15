@@ -32,19 +32,22 @@ internal sealed class PaymentService : IPaymentService
 
     public async Task<ApiResponse<IEnumerable<PaymentDto>>> GetAllAsync(PaymentParameters parameters, bool trackChanges, CancellationToken cancellationToken = default)
     {
-        var prefix = PaymentCacheKeyHelper.PaymentPrefix;
-        var cacheKey =
-            PaymentCacheKeyHelper.GetPagedKey(parameters.PageNumber, parameters.PageSize);
+        //var prefix = PaymentCacheKeyHelper.PaymentPrefix;
+        //var cacheKey =
+        //    PaymentCacheKeyHelper.GetPagedKey(parameters.PageNumber, parameters.PageSize);
 
-        var pagedPayments = await _cache.GetOrCreateAsync(
-            cacheKey,
-            async () =>
-            {
-                return await _repository.Payment.GetAllAsync(parameters, trackChanges, cancellationToken);
-            },
-            TimeSpan.FromMinutes(30),
-            CacheKeyPrefixes.Payment
-        );
+        //var pagedPayments = await _cache.GetOrCreateAsync(
+        //    cacheKey,
+        //    async () =>
+        //    {
+        //        return await _repository.Payment.GetAllAsync(parameters, trackChanges, cancellationToken);
+        //    },
+        //    TimeSpan.FromMinutes(30),
+        //    CacheKeyPrefixes.Payment
+        //);
+
+        var pagedPayments =
+            await _repository.Payment.GetAllAsync(parameters, trackChanges, cancellationToken);
 
         var entitiesDto =
             _mapper.Map<IEnumerable<PaymentDto>>(pagedPayments);
@@ -54,15 +57,18 @@ internal sealed class PaymentService : IPaymentService
 
     public async Task<ApiResponse<PaymentDto>>? GetAsync(Guid entityId, bool trackChanges, CancellationToken cancellationToken = default)
     {
-        var prefix = PaymentCacheKeyHelper.PaymentPrefix;
-        var cacheKey = PaymentCacheKeyHelper.GetEntityKey(entityId);
+        //var prefix = PaymentCacheKeyHelper.PaymentPrefix;
+        //var cacheKey = PaymentCacheKeyHelper.GetEntityKey(entityId);
 
-        var entity = await _cache.GetOrCreateAsync(
-            cacheKey,
-            async () => await FindEntity(entityId, trackChanges, cancellationToken),
-            TimeSpan.FromMinutes(10),
-            CacheKeyPrefixes.Payment
-        );
+        //var entity = await _cache.GetOrCreateAsync(
+        //    cacheKey,
+        //    async () => await FindEntity(entityId, trackChanges, cancellationToken),
+        //    TimeSpan.FromMinutes(10),
+        //    CacheKeyPrefixes.Payment
+        //);
+
+        var entity =
+            await FindEntity(entityId, trackChanges, cancellationToken);
 
         var entityDto =
             _mapper.Map<PaymentDto>(entity);
@@ -82,7 +88,7 @@ internal sealed class PaymentService : IPaymentService
         _repository.Payment.CreateEntity(entity);
         await _repository.SaveAsync(cancellationToken);
 
-        _cache.RemoveByPrefix(PaymentCacheKeyHelper.PaymentPrefix);
+        //_cache.RemoveByPrefix(PaymentCacheKeyHelper.PaymentPrefix);
 
         var entityToReturn =
             _mapper.Map<PaymentDto>(entity);
@@ -98,8 +104,8 @@ internal sealed class PaymentService : IPaymentService
         _repository.Payment.DeleteEntity(entity);
         await _repository.SaveAsync(cancellationToken);
 
-        _cache.Remove(PaymentCacheKeyHelper.GetEntityKey(entityId));
-        _cache.RemoveByPrefix(PaymentCacheKeyHelper.PaymentPrefix);
+        //_cache.Remove(PaymentCacheKeyHelper.GetEntityKey(entityId));
+        //_cache.RemoveByPrefix(PaymentCacheKeyHelper.PaymentPrefix);
 
         return new ApiResponse<string>(null, "Payment deleted successfully");
     }

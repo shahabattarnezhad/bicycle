@@ -40,15 +40,17 @@ internal sealed class BicycleService : IBicycleService
     {
         await EnsureStationAndBicycleExistAsync(stationId, bicycleId, trackChanges, cancellationToken);
 
-        var cacheKey = BicycleCacheKeyHelper.BicycleKey(stationId, bicycleId);
-        var prefix = BicycleCacheKeyHelper.BicyclePrefix(stationId);
+        //var cacheKey = BicycleCacheKeyHelper.BicycleKey(stationId, bicycleId);
+        //var prefix = BicycleCacheKeyHelper.BicyclePrefix(stationId);
 
-        var bicycle = await _cache.GetOrCreateAsync(
-            cacheKey,
-            async () => await FindBicycleForStation(stationId, bicycleId, trackChanges, cancellationToken),
-            TimeSpan.FromMinutes(10),
-            prefix
-        );
+        //var bicycle = await _cache.GetOrCreateAsync(
+        //    cacheKey,
+        //    async () => await FindBicycleForStation(stationId, bicycleId, trackChanges, cancellationToken),
+        //    TimeSpan.FromMinutes(10),
+        //    prefix
+        //);
+
+        var bicycle = await FindBicycleForStation(stationId, bicycleId, trackChanges, cancellationToken);
 
         var entityDto = _mapper.Map<BicycleDto>(bicycle);
         return new ApiResponse<BicycleDto?>(entityDto, "Bicycle retrieved successfully");
@@ -58,19 +60,22 @@ internal sealed class BicycleService : IBicycleService
     {
         await EnsureStationExistsAsync(stationId, trackChanges, cancellationToken);
 
-        var prefix = BicycleCacheKeyHelper.BicyclePrefix(stationId);
-        var cacheKey = BicycleCacheKeyHelper.BicyclePageKey(stationId, bicycleParameters.PageNumber, bicycleParameters.PageSize);
+        //var prefix = BicycleCacheKeyHelper.BicyclePrefix(stationId);
+        //var cacheKey = BicycleCacheKeyHelper.BicyclePageKey(stationId, bicycleParameters.PageNumber, bicycleParameters.PageSize);
 
-        var pagedBicycles = await _cache.GetOrCreateAsync(
-        cacheKey,
-        async () =>
-        {
-            return await _repository.Bicycle
-                .GetAllAsync(stationId, bicycleParameters, trackChanges, cancellationToken);
-        },
-        TimeSpan.FromMinutes(10),
-        prefix
-        );
+        //var pagedBicycles = await _cache.GetOrCreateAsync(
+        //cacheKey,
+        //async () =>
+        //{
+        //    return await _repository.Bicycle
+        //        .GetAllAsync(stationId, bicycleParameters, trackChanges, cancellationToken);
+        //},
+        //TimeSpan.FromMinutes(10),
+        //prefix
+        //);
+
+        var pagedBicycles =
+            await _repository.Bicycle.GetAllAsync(stationId, bicycleParameters, trackChanges, cancellationToken);
 
         var entitiesDto =
             _mapper.Map<IEnumerable<BicycleDto>>(pagedBicycles);
@@ -82,20 +87,25 @@ internal sealed class BicycleService : IBicycleService
     {
         await EnsureStationExistsAsync(stationId, trackChanges, cancellationToken);
 
-        var prefix = BicycleCacheKeyHelper.BicyclePrefix(stationId);
-        var cacheKey = BicycleCacheKeyHelper.ElectricKey(stationId);
+        //var prefix = BicycleCacheKeyHelper.BicyclePrefix(stationId);
+        //var cacheKey = BicycleCacheKeyHelper.ElectricKey(stationId);
 
-        var bicycles = await _cache.GetOrCreateAsync(
-            cacheKey,
-            async () =>
-            {
-                var electrics =
-                await _repository.Bicycle.GetElectricBicyclesAsync(stationId, bicycleParameters, trackChanges, cancellationToken);
-                return _mapper.Map<IEnumerable<BicycleDto>>(electrics);
-            },
-            TimeSpan.FromMinutes(10),
-            prefix
-        );
+        //var bicycles = await _cache.GetOrCreateAsync(
+        //    cacheKey,
+        //    async () =>
+        //    {
+        //        var electrics =
+        //        await _repository.Bicycle.GetElectricBicyclesAsync(stationId, bicycleParameters, trackChanges, cancellationToken);
+        //        return _mapper.Map<IEnumerable<BicycleDto>>(electrics);
+        //    },
+        //    TimeSpan.FromMinutes(10),
+        //    prefix
+        //);
+
+        var electrics = 
+            await _repository.Bicycle.GetElectricBicyclesAsync(stationId, bicycleParameters, trackChanges, cancellationToken);
+
+        var bicycles = _mapper.Map<IEnumerable<BicycleDto>>(electrics);
 
         return new ApiResponse<IEnumerable<BicycleDto>>(bicycles, "Electric bicycles retrieved successfully", bicycles.Count());
     }
@@ -104,20 +114,25 @@ internal sealed class BicycleService : IBicycleService
     {
         await EnsureStationExistsAsync(stationId, trackChanges, cancellationToken);
 
-        var prefix = BicycleCacheKeyHelper.BicyclePrefix(stationId);
-        var cacheKey = BicycleCacheKeyHelper.InactiveKey(stationId);
+        //var prefix = BicycleCacheKeyHelper.BicyclePrefix(stationId);
+        //var cacheKey = BicycleCacheKeyHelper.InactiveKey(stationId);
 
-        var bicycles = await _cache.GetOrCreateAsync(
-            cacheKey,
-            async () =>
-            {
-                var inactives =
+        //var bicycles = await _cache.GetOrCreateAsync(
+        //    cacheKey,
+        //    async () =>
+        //    {
+        //        var inactives =
+        //        await _repository.Bicycle.GetInActiveAsync(stationId, bicycleParameters, trackChanges, cancellationToken);
+        //        return _mapper.Map<IEnumerable<BicycleDto>>(inactives);
+        //    },
+        //    TimeSpan.FromMinutes(10),
+        //    prefix
+        //);
+
+        var inactives =
                 await _repository.Bicycle.GetInActiveAsync(stationId, bicycleParameters, trackChanges, cancellationToken);
-                return _mapper.Map<IEnumerable<BicycleDto>>(inactives);
-            },
-            TimeSpan.FromMinutes(10),
-            prefix
-        );
+
+        var bicycles = _mapper.Map<IEnumerable<BicycleDto>>(inactives);
 
         return new ApiResponse<IEnumerable<BicycleDto>>(bicycles, "Inactive bicycles retrieved successfully", bicycles.Count());
     }
@@ -136,7 +151,7 @@ internal sealed class BicycleService : IBicycleService
         _repository.Bicycle.CreateBicycle(bicycleEntity);
         await _repository.SaveAsync(cancellationToken);
 
-        _cache.RemoveByPrefix(BicycleCacheKeyHelper.BicyclePrefix(stationId));
+        //_cache.RemoveByPrefix(BicycleCacheKeyHelper.BicyclePrefix(stationId));
 
         //_logger.LogInformation("Bicycle with serial number {SerialNumber} created for station {StationId}", bicycle.SerialNumber, stationId);
 
@@ -154,8 +169,8 @@ internal sealed class BicycleService : IBicycleService
         _mapper.Map(entityForUpdation, bicycle);
         await _repository.SaveAsync(cancellationToken);
 
-        _cache.RemoveByPrefix(BicycleCacheKeyHelper.BicyclePrefix(stationId));
-        _cache.Remove(BicycleCacheKeyHelper.BicycleKey(stationId, bicycleId));
+        //_cache.RemoveByPrefix(BicycleCacheKeyHelper.BicyclePrefix(stationId));
+        //_cache.Remove(BicycleCacheKeyHelper.BicycleKey(stationId, bicycleId));
 
         return new ApiResponse<string>(null, "Bicycle updated successfully");
     }
@@ -171,8 +186,8 @@ internal sealed class BicycleService : IBicycleService
         _repository.Bicycle.DeleteBicycle(bicycle);
         await _repository.SaveAsync(cancellationToken);
 
-        _cache.RemoveByPrefix(BicycleCacheKeyHelper.BicyclePrefix(stationId));
-        _cache.Remove(BicycleCacheKeyHelper.BicycleKey(stationId, bicycleId));
+        //_cache.RemoveByPrefix(BicycleCacheKeyHelper.BicyclePrefix(stationId));
+        //_cache.Remove(BicycleCacheKeyHelper.BicycleKey(stationId, bicycleId));
 
         //_logger.LogInformation("Bicycle deleted successfully");
 
@@ -197,8 +212,8 @@ internal sealed class BicycleService : IBicycleService
         await _repository.Bicycle.ActivateBicycleAsync(stationId, bicycleId, cancellationToken);
         await _repository.SaveAsync(cancellationToken);
 
-        _cache.RemoveByPrefix($"bicycles_station_{stationId}");
-        _cache.Remove($"bicycles_station_{stationId}_bicycle_{bicycleId}");
+        //_cache.RemoveByPrefix($"bicycles_station_{stationId}");
+        //_cache.Remove($"bicycles_station_{stationId}_bicycle_{bicycleId}");
 
         return new ApiResponse<string>(null, "Bicycle activated successfully");
     }
@@ -210,8 +225,8 @@ internal sealed class BicycleService : IBicycleService
         await _repository.Bicycle.DeactivateBicycleAsync(stationId, bicycleId, cancellationToken);
         await _repository.SaveAsync(cancellationToken);
 
-        _cache.RemoveByPrefix($"bicycles_station_{stationId}");
-        _cache.Remove($"bicycles_station_{stationId}_bicycle_{bicycleId}");
+        //_cache.RemoveByPrefix($"bicycles_station_{stationId}");
+        //_cache.Remove($"bicycles_station_{stationId}_bicycle_{bicycleId}");
 
         return new ApiResponse<string>(null, "Bicycle deactivated successfully");
     }
@@ -233,17 +248,22 @@ internal sealed class BicycleService : IBicycleService
     {
         await EnsureStationExistsAsync(stationId, trackChanges, cancellationToken);
 
-        var bicycles = await _cache.GetOrCreateAsync(
-            "AvailableBicycles",
-            async () =>
-            {
-                var available =
+        //var bicycles = await _cache.GetOrCreateAsync(
+        //    "AvailableBicycles",
+        //    async () =>
+        //    {
+        //        var available =
+        //        await _repository.Bicycle.GetAvailableAsync(stationId, bicycleParameters, trackChanges, cancellationToken);
+        //        return _mapper.Map<IEnumerable<BicycleDto>>(available);
+        //    },
+        //    TimeSpan.FromMinutes(2),
+        //    CacheKeyPrefixes.Bicycle
+        //);
+
+        var available =
                 await _repository.Bicycle.GetAvailableAsync(stationId, bicycleParameters, trackChanges, cancellationToken);
-                return _mapper.Map<IEnumerable<BicycleDto>>(available);
-            },
-            TimeSpan.FromMinutes(2),
-            CacheKeyPrefixes.Bicycle
-        );
+
+        var bicycles = _mapper.Map<IEnumerable<BicycleDto>>(available);
 
         return new ApiResponse<IEnumerable<BicycleDto>>(bicycles, "Available bicycles retrieved successfully", bicycles.Count());
     }

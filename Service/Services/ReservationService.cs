@@ -35,18 +35,20 @@ internal sealed class ReservationService : IReservationService
 
     public async Task<ApiResponse<IEnumerable<ReservationDto>>> GetAllAsync(ReservationParameters parameters, bool trackChanges, CancellationToken cancellationToken = default)
     {
-        var prefix = ReservationCacheKeyHelper.ReservationPrefix;
-        var cacheKey = ReservationCacheKeyHelper.GenerateReservationListKey(parameters);
+        //var prefix = ReservationCacheKeyHelper.ReservationPrefix;
+        //var cacheKey = ReservationCacheKeyHelper.GenerateReservationListKey(parameters);
 
-        var pagedReservations = await _cache.GetOrCreateAsync(
-            cacheKey,
-            async () =>
-            {
-                return await _repository.Reservation.GetAllAsync(parameters, trackChanges, cancellationToken);
-            },
-            TimeSpan.FromMinutes(10),
-            prefix
-        );
+        //var pagedReservations = await _cache.GetOrCreateAsync(
+        //    cacheKey,
+        //    async () =>
+        //    {
+        //        return await _repository.Reservation.GetAllAsync(parameters, trackChanges, cancellationToken);
+        //    },
+        //    TimeSpan.FromMinutes(10),
+        //    prefix
+        //);
+
+        var pagedReservations = await _repository.Reservation.GetAllAsync(parameters, trackChanges, cancellationToken);
 
         var entitiesDto =
             _mapper.Map<IEnumerable<ReservationDto>>(pagedReservations);
@@ -120,7 +122,7 @@ internal sealed class ReservationService : IReservationService
             await transaction.CommitAsync(cancellationToken);
 
             // 9. پاکسازی کش
-            _cache.RemoveByPrefix(ReservationCacheKeyHelper.ReservationPrefix);
+            //_cache.RemoveByPrefix(ReservationCacheKeyHelper.ReservationPrefix);
 
             var dtoToReturn = _mapper.Map<ReservationDto>(reservation);
             return new ApiResponse<ReservationDto>(dtoToReturn, "Reservation created successfully.");
@@ -135,14 +137,17 @@ internal sealed class ReservationService : IReservationService
 
     public async Task<ApiResponse<ReservationDto>>? GetAsync(Guid entityId, bool trackChanges, CancellationToken cancellationToken = default)
     {
-        var cacheKey = ReservationCacheKeyHelper.GenerateReservationKey(entityId);
+        //var cacheKey = ReservationCacheKeyHelper.GenerateReservationKey(entityId);
 
-        var entity = await _cache.GetOrCreateAsync(
-            cacheKey,
-            async () => await FindEntity(entityId, trackChanges, cancellationToken),
-            TimeSpan.FromMinutes(10),
-            ReservationCacheKeyHelper.ReservationPrefix
-        );
+        //var entity = await _cache.GetOrCreateAsync(
+        //    cacheKey,
+        //    async () => await FindEntity(entityId, trackChanges, cancellationToken),
+        //    TimeSpan.FromMinutes(10),
+        //    ReservationCacheKeyHelper.ReservationPrefix
+        //);
+
+        var entity =
+            await FindEntity(entityId, trackChanges, cancellationToken);
 
         var entityDto =
             _mapper.Map<ReservationDto>(entity);
@@ -158,8 +163,8 @@ internal sealed class ReservationService : IReservationService
         _repository.Reservation.DeleteEntity(entity);
         await _repository.SaveAsync(cancellationToken);
 
-        _cache.Remove(ReservationCacheKeyHelper.GenerateReservationKey(entityId), ReservationCacheKeyHelper.ReservationPrefix);
-        _cache.RemoveByPrefix(ReservationCacheKeyHelper.ReservationPrefix);
+        //_cache.Remove(ReservationCacheKeyHelper.GenerateReservationKey(entityId), ReservationCacheKeyHelper.ReservationPrefix);
+        //_cache.RemoveByPrefix(ReservationCacheKeyHelper.ReservationPrefix);
 
         return new ApiResponse<string>(null, "Station deleted successfully");
     }
@@ -215,11 +220,11 @@ internal sealed class ReservationService : IReservationService
             await transaction.CommitAsync(cancellationToken);
 
             // 7. پاکسازی کش
-            _cache.RemoveByPrefix(ReservationCacheKeyHelper.ReservationPrefix);
-            _cache.Remove(ReservationCacheKeyHelper.GenerateReservationKey(dto.ReservationId));
-            _cache.RemoveByPrefix(BicycleCacheKeyHelper.BicyclePrefix(returnStation.Id));
-            _cache.RemoveByPrefix(BicycleCacheKeyHelper.BicyclePrefix(bicycle.CurrentStationId));
-            _cache.RemoveByPrefix(StationCacheKeyHelper.StationPrefix);
+            //_cache.RemoveByPrefix(ReservationCacheKeyHelper.ReservationPrefix);
+            //_cache.Remove(ReservationCacheKeyHelper.GenerateReservationKey(dto.ReservationId));
+            //_cache.RemoveByPrefix(BicycleCacheKeyHelper.BicyclePrefix(returnStation.Id));
+            //_cache.RemoveByPrefix(BicycleCacheKeyHelper.BicyclePrefix(bicycle.CurrentStationId));
+            //_cache.RemoveByPrefix(StationCacheKeyHelper.StationPrefix);
 
             return new ApiResponse<string>(null, $"Bike returned successfully. Final cost: {finalCost} Toman.");
         }
